@@ -2,7 +2,7 @@
   "name": "sfynx-project/cmf-plugin-gedmo-bundle",
   "type": "symfony-bundle",
   "description": "This Bundle provide a plugin with several widgets like block, Menu, Organigram, Slide, Contact, Tree to work with the CMF",
-  "keywords": ["cmf", "acl"],
+  "keywords": ["cmf", "widget"],
   "homepage": "http://pigroupe.github.io/cmf-sfynx/",
   "license": "MIT",
   "authors": [
