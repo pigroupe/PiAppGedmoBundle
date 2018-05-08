@@ -13,7 +13,7 @@
 namespace PiApp\GedmoBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
-use Sfynx\CoreBundle\Repository\TranslationRepository;
+use Sfynx\CoreBundle\Layers\Infrastructure\Persistence\Adapter\Generalisation\Orm\Traits\TraitTranslation;
 
 /**
  * Block Repository
@@ -26,6 +26,7 @@ use Sfynx\CoreBundle\Repository\TranslationRepository;
  * 
  * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
  */
-class BlockRepository extends TranslationRepository
+class BlockRepository extends EntityRepository
 {
+    use TraitTranslation;
 }

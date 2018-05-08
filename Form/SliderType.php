@@ -18,8 +18,8 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 
-use PiApp\GedmoBundle\Entity\Category;
-use Sfynx\MediaBundle\Entity\Mediatheque;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Category;
+use Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque;
 
 /**
  * Description of the SliderType form.
@@ -35,17 +35,17 @@ class SliderType extends AbstractType
      * @var \Doctrine\ORM\EntityManager
      */
     protected $_em;
-    
+
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
     protected $_container;
-    
+
     /**
      * @var string
      */
-    protected $_locale;    
-    
+    protected $_locale;
+
     /**
      * Constructor.
      *
@@ -56,9 +56,9 @@ class SliderType extends AbstractType
     {
         $this->_em        = $em;
         $this->_container = $container;
-        $this->_locale    = $locale;        
+        $this->_locale    = $locale;
     }
-        
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $id_media = null;
@@ -70,7 +70,7 @@ class SliderType extends AbstractType
         }
         if (isset($_POST['piapp_gedmobundle_slidertype']['media'])) {
             $id_media = $_POST['piapp_gedmobundle_slidertype']['media'];
-        }       
+        }
         //
         // get the id of media
         if ($builder->getData()->getCategory()
@@ -80,9 +80,9 @@ class SliderType extends AbstractType
         }
         if (isset($_POST['piapp_gedmobundle_slidertype']['category'])) {
             $id_category = $_POST['piapp_gedmobundle_slidertype']['category'];
-        }   
+        }
         //
-        $builder  
+        $builder
             ->add('enabled', 'checkbox', array(
                     'data'  => true,
                     'label'    => 'pi.form.label.field.enabled',
@@ -115,20 +115,20 @@ class SliderType extends AbstractType
                     'required'  => false,
                     "attr" => array(
                         "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_selectentity_ajax", array('type'=> 4)),
+                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_selectentity_ajax", array('type'=> 4)),
                         "data-selectid" => $id_category,
                         "data-max" => 50,
                     ),
                     'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
                                     title="Ajouter une catégorie"
                                     data-title="Catégorie"
-                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 4)).'"
+                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 4)).'"
                                     data-selectid="#piapp_gedmobundle_categorytype_id"
                                     data-selecttitle="#piapp_gedmobundle_categorytype_name"
                                     data-insertid="#piapp_gedmobundle_slidertype_category"
                                     data-inserttype="multiselect"
-                                    ></a>',                             
-            ))      
+                                    ></a>',
+            ))
             ->add('title', 'text', array(
                     'label'        => "pi.form.label.field.title",
                     'required'  => false,
@@ -139,7 +139,7 @@ class SliderType extends AbstractType
                             "class"=>"detail_collection",
                     ),
                     'required'  => false,
-            ))   
+            ))
             ->add('descriptifleft', 'textarea', array(
                      'required'  => false,
                     "label" => 'Description Left resume',
@@ -176,14 +176,14 @@ class SliderType extends AbstractType
                     "label_attr" => array(
                             "class"=>"link_collection",
                     ),
-            )) 
+            ))
             ->add('pagetitle', 'text', array(
                     "label" => 'Page title',
                     "label_attr" => array(
                             "class"=>"link_collection",
                     ),
                     'required'  => false,
-            ))            
+            ))
             ->add('meta_keywords', 'textarea', array(
                     "label" => "pi.form.label.field.meta_keywords",
                     "label_attr" => array(
@@ -197,13 +197,13 @@ class SliderType extends AbstractType
                             "class"=>"meta_definition",
                     ),
                     'required'  => false,
-            ))            
-            //->add('media', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "simpleLink", 'pi.form.label.media.picture'))
+            ))
+            //->add('media', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "simpleLink", 'pi.form.label.media.picture'))
             ->add('media', 'entity', array(
              		'class' => 'SfynxMediaBundle:Mediatheque',
             		'query_builder' => function(EntityRepository $er) use ($id_media) {
                             $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                            $translatableListener->setTranslationFallback(true);            			
+                            $translatableListener->setTranslationFallback(true);
                             return $er->createQueryBuilder('a')
                             ->select('a')
                             ->where("a.id IN (:id)")
@@ -227,26 +227,26 @@ class SliderType extends AbstractType
             		),
             		"attr" => array(
                             "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_selectentity_ajax", array('type'=>'image')),
+                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_selectentity_ajax", array('type'=>'image')),
                             "data-selectid" => $id_media,
                             "data-max" => 50,
             		),
             		'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
              				title="Ajouter une image à la médiatheque"
              				data-title="Mediatheque"
-             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
+             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
              				data-selectid="#sfynx_mediabundle_mediatype_id"
              				data-selecttitle="#sfynx_mediabundle_mediatype_title"
              				data-insertid="#piapp_gedmobundle_blocktype_media"
              				data-inserttype="multiselect"
-             				></a>',            		
-             ))                               
+             				></a>',
+             ))
         ;
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'piapp_gedmobundle_slidertype';
     }
-        
+
 }

@@ -14,7 +14,6 @@ namespace PiApp\GedmoBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
 use Doctrine\ORM\EntityManager;
-use PiApp\GedmoBundle\Builder\RepositoryBuilderInterface;
 
 /**
  * Main Repository
@@ -27,7 +26,7 @@ use PiApp\GedmoBundle\Builder\RepositoryBuilderInterface;
  *
  * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
  */
-class Repository implements RepositoryBuilderInterface
+class Repository
 {
     /**
      * @var \Doctrine\ORM\EntityManager

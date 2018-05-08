@@ -14,9 +14,8 @@ namespace PiApp\GedmoBundle\Manager\FormBuilder;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
-use Sfynx\CmfBundle\Manager\PiFormBuilderManager;
-use PiApp\GedmoBundle\Manager\FormBuilder\PiModelWidgetSlideCollectionType;
-use PiApp\GedmoBundle\Manager\FormBuilder\PiModelWidgetSearchFieldsType;
+use Sfynx\CmfBundle\Layers\Domain\Service\Manager\PiFormBuilderManager;
+use Sfynx\CmfBundle\Layers\Domain\Service\Util\PiWidget\Gedmo\SliderHandler;
         
 /**
 * Description of the Form builder manager
@@ -88,14 +87,15 @@ class PiModelWidgetSlide extends PiFormBuilderManager
         // we get all entities
         //$listTableClasses = $this->container->get('sfynx.database.db')->listTables('table_class');
         //$listTableClasses = array_combine($listTableClasses, $listTableClasses);
-        $ListsAvailableEntities = \Sfynx\CmfBundle\Util\PiWidget\PiGedmoManager::getAvailableSlider();
+        $ListsAvailableEntities = SliderHandler::getAvailable();
         $ListsAvailableEntities = array_combine(array_keys($ListsAvailableEntities), array_keys($ListsAvailableEntities));
         // we get all slide templates
-        $listFiles = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle("/Resources/views/Template/Slider");
-        $listFiles = array_map(function($value) {
-        	return basename($value);
+        $listFiles = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle('/Resources/views/Template/Slider', 'twig', 'templating');
+        $listFiles_ = array_map(function($value) {
+            $arr = explode(':', $value);
+            return end($arr);
         }, array_values($listFiles));
-        $listFiles = array_combine($listFiles, $listFiles);
+        $listFiles = array_combine($listFiles, $listFiles_);
         //
         $action = \PiApp\GedmoBundle\Util\PiJquery\PiFlexSliderManager::$actions;
         $action = array_combine($action, $action);
@@ -104,9 +104,9 @@ class PiModelWidgetSlide extends PiFormBuilderManager
         $menus = array_combine($menus, $menus);    
         //
         $css = array(
-            "bundles/sfynxtemplate/js/slider/flexslider/css/flexslider_v1.css" => 'Default',
-            "bundles/sfynxtemplate/js/slider/flexslider/css/flexslider_v2.css" => 'Default-2',
-            "bundles/sfynxtemplate/js/slider/flexslider/css/flexslider_v3.css" => 'Default-3',
+            "/bundles/sfynxtemplate/js/slider/flexslider/css/flexslider_v1.css" => 'Default',
+            "/bundles/sfynxtemplate/js/slider/flexslider/css/flexslider_v2.css" => 'Default-2',
+            "/bundles/sfynxtemplate/js/slider/flexslider/css/flexslider_v3.css" => 'Default-3',
         );
         // we create the forme
         $builder
@@ -291,7 +291,7 @@ class PiModelWidgetSlide extends PiFormBuilderManager
         		'prototype'    => true,
         		// Post update
         		'by_reference' => true,
-        		'type'   => new PiModelWidgetSlideCollectionType($this->_locale, $this->_container),
+        		'type'   => new PiModelWidgetSlideCollectionType($this->_locale, $this->container),
         		'options'  => array(
         				'attr'      => array('class' => 'collection_widget')
         		),
@@ -303,7 +303,7 @@ class PiModelWidgetSlide extends PiFormBuilderManager
         		'prototype'    => true,
         		// Post update
         		'by_reference' => true,
-        		'type'   => new PiModelWidgetSearchFieldsType($this->_locale, $this->_container),
+        		'type'   => new PiModelWidgetSearchFieldsType($this->_locale, $this->container),
         		'options'  => array(
         				'attr'      => array('class' => 'collection_widget')
         		),

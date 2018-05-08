@@ -1,0 +1,13 @@
+services:
+#    sfynx.gedmo.controller.block:
+#        class: 'Sfynx\GedmoBundle\Controller\BlockController'
+#        arguments:
+#            - '@security.csrf.token_manager'
+#            - '@sfynx.core.request.strategy'
+#            - '@doctrine'
+#            - '@templating'
+#            - '@form.factory'
+#            - '@sfynx.auth.role.factory'
+#            - '@sfynx.tool.twig.extension.tool'
+#            - '@sfynx.tool.twig.extension.route'
+#            - '@sfynx.tool.twig.extension.form'

@@ -13,7 +13,7 @@
 namespace PiApp\GedmoBundle\Twig\Extension;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Sfynx\ToolBundle\Exception\ExtensionException;
+use Sfynx\CoreBundle\Layers\Infrastructure\Exception\ExtensionException;
 
 /**
  * Tool Filters and Functions used in twig
@@ -64,9 +64,7 @@ class PiToolExtension extends \Twig_Extension
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function getFunctions() {
-        return array(
-                //'getName'        => new \Twig_Function_Method($this, 'getNameFunction'),
-        );
+        return [];
     }
     
     

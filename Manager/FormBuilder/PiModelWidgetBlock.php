@@ -10,14 +10,14 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace PiApp\GedmoBundle\Manager\FormBuilder;  
+namespace PiApp\GedmoBundle\Manager\FormBuilder;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
 
-use Sfynx\CmfBundle\Manager\PiFormBuilderManager;
+use Sfynx\CmfBundle\Layers\Domain\Service\Manager\PiFormBuilderManager;
 use Doctrine\ORM\EntityRepository;
-        
+
 /**
 * Description of the Form builder manager
 *
@@ -32,29 +32,29 @@ class PiModelWidgetBlock extends PiFormBuilderManager
      * Type form name.
      */
     const FORM_TYPE_NAME = 'symfony';
-    
+
     /**
      * Template form name.
      */
-    const FORM_DECORATOR = 'model_form_builder.html.twig';    
-    
+    const FORM_DECORATOR = 'model_form_builder.html.twig';
+
     /**
      * Form name.
      */
-    const FORM_NAME = 'formbuilder';    
-    
+    const FORM_NAME = 'formbuilder';
+
     /**
      * Constructor.
      *
      * @param \Symfony\Component\DependencyInjection\ContainerInterface
-     * 
+     *
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function __construct(ContainerInterface $containerService)
     {
         parent::__construct($containerService, 'WIDGET', 'block', $this::FORM_TYPE_NAME, $this::FORM_DECORATOR, $this::FORM_NAME);
     }
-    
+
     /**
      * Return list of available content types for all type pages.
      *
@@ -80,16 +80,16 @@ class PiModelWidgetBlock extends PiFormBuilderManager
      * @return string
      *
      * @author (c) Etienne de Longeaux <etienne_delongeaux@hotmail.com>
-     */    
+     */
     public function buildForm(FormBuilderInterface $builder, array $options)
-    {   
+    {
         $query = $this->_em->
                 getRepository("PiAppGedmoBundle:Block")
                 ->getAllByCategory('', null, "DESC", '', true)->getQuery();
         $choiceList = $this->_em
                 ->getRepository("PiAppGedmoBundle:Block")
-                ->findTranslationsByQuery($this->_locale, $query, 'object', false);        
-        $result = array();
+                ->findTranslationsByQuery($this->_locale, $query, 'object', false);
+        $result = [];
         if (is_array($choiceList)) {
             foreach ($choiceList as $key => $field) {
                 $title = $field->getTitle();
@@ -101,6 +101,7 @@ class PiModelWidgetBlock extends PiFormBuilderManager
             }
         }
         sort($result);
+
         $builder
             ->add('choice', 'choice', array(
                     'choices'   => array("insert"=>"Insert", "create"=>"Create"),
@@ -123,20 +124,10 @@ class PiModelWidgetBlock extends PiFormBuilderManager
                     ),
                     "label_attr" => array(
                             "class"=>"block_insert_collection",
-                    ),                    
+                    ),
             ))
             ->add('template', 'choice', array(
-                    'choices'   => array(
-                            '_tmp_show-block-descriptif-left-picture.html.twig'    => 'pi.block.formbuilder.template.choice1',
-                            '_tmp_show-block-descriptif-right-picture.html.twig'=> 'pi.block.formbuilder.template.choice2',
-                            '_tmp_show-block-tpl1.html.twig'                       => 'pi.block.formbuilder.template.choice3',
-                            '_tmp_show-block-tpl2.html.twig'                       => 'pi.block.formbuilder.template.choice4',
-                            '_tmp_show-block-tpl3.html.twig'                       => 'pi.block.formbuilder.template.choice5',
-                            '_tmp_show-block-tpl4.html.twig'                       => 'pi.block.formbuilder.template.choice6',
-                            '_tmp_show-block-tpl5.html.twig'                       => 'pi.block.formbuilder.template.choice9',
-                            '_tmp_show-block-video-left.html.twig'                => 'pi.block.formbuilder.template.choice7',
-                            '_tmp_show-block-video-right.html.twig'                => 'pi.block.formbuilder.template.choice8',
-                    ),
+                    'choices'   => $GLOBALS['WDIGET_CONFIG_GEDMO']['BLOCK_TEMPLATE'],
                     'multiple'    => false,
                     'required'  => true,
                     'empty_value' => 'pi.form.label.select.choose.template',
@@ -182,30 +173,30 @@ class PiModelWidgetBlock extends PiFormBuilderManager
                     "label_attr" => array(
                         "class"=>"block_collection",
                     ),
-             ))                            
+             ))
             ;
     }
-    
+
     /**
      * Sets JS script.
      *
      * @param array $options
-     * 
+     *
      * @access public
      * @return void
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
-    public function renderScript(array $option) 
+    public function renderScript(array $option)
     {
         // We open the buffer.
         ob_start ();
         ?>
-            jQuery(document).ready(function(){        
+            jQuery(document).ready(function(){
                 var  create_content_form  = $(".block_collection");
                 var  insert_content_form  = $(".block_insert_collection");
 
                 create_content_form.parents('.clearfix').hide();
-                
+
                 $("#piappgedmobundlemanagerformbuilderpimodelwidgetblock_id_block").attr("required", "required");
                 $("#piappgedmobundlemanagerformbuilderpimodelwidgetblock_title").removeAttr("required");
                 $("#piappgedmobundlemanagerformbuilderpimodelwidgetblock_descriptif").removeAttr("required");
@@ -244,19 +235,19 @@ class PiModelWidgetBlock extends PiFormBuilderManager
                         $("#piappgedmobundlemanagerformbuilderpimodelwidgetblock_descriptif").removeAttr("required");
                     }
                    });
-                                      
+
             });
-        <?php 
+        <?php
         // We retrieve the contents of the buffer.
         $_content_js = ob_get_contents ();
         // We clean the buffer.
         ob_clean ();
         // We close the buffer.
         ob_end_flush ();
-        
+
         return  $this->container->get('sfynx.tool.script_manager')->renderScript($_content_js, "", 'formbuilder/default/block/');
-    }                
-    
+    }
+
     /**
      *
      *
@@ -267,9 +258,9 @@ class PiModelWidgetBlock extends PiFormBuilderManager
      */
     public function preEventBindRequest()
     {
-        $this->_createentity    =     new  \PiApp\GedmoBundle\Entity\Block();
+        $this->_createentity    =     new  \PiApp\GedmoBundle\Layers\Domain\Entity\Block();
         //$this->_form            = $this->container->get('form.factory')->create(new PiModelWidgetBlock($this->container));
-    }    
+    }
 
     /**
      *
@@ -282,28 +273,28 @@ class PiModelWidgetBlock extends PiFormBuilderManager
     public function preEventActionForm(array $data)
     {
         if ($data["choice"] == "create"){
-            $this->_createentity->setEnabled(true);            
-            
-            if (!empty($this->_data['category']) || !is_null($this->_data['category'])){
+            $this->_createentity->setEnabled(true);
+
+            if (!empty($this->_data['category']) || !(null === $this->_data['category'])){
                 $category = $this->_em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($this->_locale, $this->_data['category'], 'object');
-                
-                if ($category instanceof \PiApp\GedmoBundle\Entity\Category)
+
+                if ($category instanceof \PiApp\GedmoBundle\Layers\Domain\Entity\Category)
                     $this->_createentity->setCategory($category);
             }
-            
+
             $this->_createentity->setTitle($this->_data['title']);
             $this->_createentity->setDescriptif($this->_data['descriptif']);
             $this->_createentity->setPublishedAt(new \DateTime());
             $this->_createentity->setCreatedAt(new \DateTime());
-                
+
             $this->_createentity->setTranslatableLocale($this->_locale);
             $this->_em->persist($this->_createentity);
             $this->_em->flush();
-            
+
             $this->_data['id_block'] = $this->_createentity->getId();
         }
     }
-    
+
     /**
      *
      *
@@ -312,8 +303,8 @@ class PiModelWidgetBlock extends PiFormBuilderManager
      *
      * @author (c) Etienne de Longeaux <etienne_delongeaux@hotmail.com>
      */
-    public function postEventActionForm(array $data){}    
-    
+    public function postEventActionForm(array $data){}
+
     /**
      *
      *
@@ -324,21 +315,20 @@ class PiModelWidgetBlock extends PiFormBuilderManager
      */
     public function XmlConfigWidget(array $data)
     {
-        return
-        array(
-                'plugin'    => 'gedmo',
-                'action'    => 'listener',
-                'xml'         => Array (
-                        "widgets"     => Array (
-                                "gedmo"        => Array (
-                                        "controller"    => 'PiAppGedmoBundle:Block:_template_show',
-                                        "params"        => Array (
-                                                "id"         => $data['id_block'],
-                                                "template"    => $data['template']
-                                        )
-                                )
+        return [
+            'plugin'    => 'gedmo',
+            'action'    => 'listener',
+            'xml'         => Array (
+                "widgets"     => Array (
+                    "gedmo"        => Array (
+                        "controller"    => 'PiAppGedmoBundle:Block:_template_show',
+                        "params"        => Array (
+                                "id"         => $data['id_block'],
+                                "template"    => $data['template']
                         )
-                ),
-        );
-    }    
+                    )
+                )
+            ),
+        ];
+    }
 }

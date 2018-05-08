@@ -15,7 +15,7 @@ namespace PiApp\GedmoBundle\Form;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Symfony\Component\OptionsResolver\OptionsResolverInterface;
+use Symfony\Component\OptionsResolver\OptionsResolver;
 use Doctrine\ORM\EntityManager;
 use Doctrine\ORM\EntityRepository;
 use Symfony\Component\Validator\Constraints;
@@ -34,17 +34,17 @@ class BlockType extends AbstractType
      * @var \Doctrine\ORM\EntityManager
      */
     protected $_em;
-    
+
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
     protected $_container;
-    
+
     /**
      * @var string
      */
-    protected $_locale;    
-    
+    protected $_locale;
+
     /**
      * Constructor.
      *
@@ -55,12 +55,13 @@ class BlockType extends AbstractType
     {
         $this->_em             = $em;
         $this->_container     = $container;
-        $this->_locale        = $locale;        
+        $this->_locale        = $locale;
     }
-        
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $id_category = null;
+        print_r($builder->getData());exit;
         if ($builder->getData()->getCategory()
                 instanceof Category
         ) {
@@ -68,13 +69,13 @@ class BlockType extends AbstractType
         }
         if (isset($_POST['piapp_gedmobundle_blocktype']['category'])) {
             $id_category = $_POST['piapp_gedmobundle_blocktype']['category'];
-        }  
+        }
         //
         $id_media = null;
         $id_media1 = null;
         // get the id of media
         if ($builder->getData()->getMedia()
-                instanceof \Sfynx\MediaBundle\Entity\Mediatheque
+                instanceof \Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque
         ) {
             $id_media = $builder->getData()->getMedia()->getId();
         }
@@ -82,15 +83,15 @@ class BlockType extends AbstractType
             $id_media = $_POST['piapp_gedmobundle_blocktype']['media'];
         }
         // get the id of media1
-        if ($builder->getData()->getMedia1() 
-                instanceof \Sfynx\MediaBundle\Entity\Mediatheque
+        if ($builder->getData()->getMedia1()
+                instanceof \Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque
         ) {
             $id_media1 = $builder->getData()->getMedia1()->getId();
         }
         if (isset($_POST['piapp_gedmobundle_blocktype']['media1'])) {
             $id_media1 = $_POST['piapp_gedmobundle_blocktype']['media1'];
-        }  
-        
+        }
+
         $is_enabled    = true;
         $is_category   = true;
         $is_title      = true;
@@ -100,7 +101,7 @@ class BlockType extends AbstractType
         $is_page       = true;
         $is_media      = true;
         $is_media1     = true;
-        $template      = $this->_container->get('request')->query->get('template');
+        $template      = $this->_container->get('request_stack')->getCurrentRequest()->query->get('template');
         if (in_array($template, array('_tmp_show-block-tpl1.html.twig','_tmp_show-block-tpl3.html.twig','_tmp_show-block-tpl4.html.twig'))){
             $is_enabled    = false;
             $is_category   = false;
@@ -115,14 +116,14 @@ class BlockType extends AbstractType
             $is_descriptif = false;
             $is_author     = false;
             $is_page       = false;
-        }   
+        }
         if (in_array($template, array('_tmp_show-block-descriptif-left-picture.html.twig','_tmp_show-block-descriptif-right-picture.html.twig','_tmp_lamelee_block_share.html.twig'))){
             $is_enabled    = false;
             $is_category   = false;
             $is_content    = false;
             $is_author     = false;
             $is_media1     = false;
-        }             
+        }
         if (in_array($template, array('_tmp_show-block-video-left.html.twig','_tmp_show-block-video-right.html.twig','_tmp_mid_block_abo.html.twig','_tmp_mid_block_annonce.html.twig','_tmp_lamelee_block_register_auth.html.twig','_tmp_lamelee_block_register.html.twig'))){
             $is_enabled    = false;
             $is_category   = false;
@@ -138,7 +139,7 @@ class BlockType extends AbstractType
             $is_content    = false;
             $is_author     = false;
             $is_media1     = false;
-        } 
+        }
         if (in_array($template, array('_tmp_lamelee_block_header_thematic.html.twig','_tmp_lamelee_block_header_partner.html.twig'))){
             $is_enabled    = false;
             $is_category   = false;
@@ -156,19 +157,19 @@ class BlockType extends AbstractType
             $is_author     = false;
             $is_media      = false;
             $is_media1     = false;
-        }        
+        }
         if ($is_enabled) {
-            $builder            
+            $builder
              ->add('enabled', 'checkbox', array(
                 'data'  => true,
                  'label'    => 'pi.form.label.field.enabled',
                  "label_attr" => array(
                     "class"=>"block_collection",
                  ),
-            )); 
+            ));
         } else {
-             $builder            
-             ->add('enabled', 'hidden');      
+             $builder
+             ->add('enabled', 'hidden');
         }
         if ($is_category) {
              $builder
@@ -191,19 +192,19 @@ class BlockType extends AbstractType
                     'required'  => false,
                     "attr" => array(
                         "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_selectentity_ajax", array('type'=> 1)),
+                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_selectentity_ajax", array('type'=> 1)),
                         "data-selectid" => $id_category,
                         "data-max" => 50,
                     ),
                     'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
                                     title="Ajouter une catégorie"
                                     data-title="Catégorie"
-                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 1)).'"
+                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 1)).'"
                                     data-selectid="#piapp_gedmobundle_categorytype_id"
                                     data-selecttitle="#piapp_gedmobundle_categorytype_name"
                                     data-insertid="#piapp_gedmobundle_blocktype_category"
                                     data-inserttype="multiselect"
-                                    ></a>', 
+                                    ></a>',
             ));
         }
         if ($is_title) {
@@ -249,7 +250,7 @@ class BlockType extends AbstractType
                      "label"     => "pi.form.label.field.author",
                      "label_attr" => array(
                              "class"=>"block_collection",
-                     ),                     
+                     ),
              ));
         }
         if ($is_page) {
@@ -270,14 +271,14 @@ class BlockType extends AbstractType
                      "label_attr" => array(
                         "class"=>"url_collection",
                      ),
-             ))                        
+             ))
              ->add('url', 'text', array(
                      'required'  => false,
                      "label"     => "pi.form.label.field.or",
                      "label_attr" => array(
                         "class"=>"url_collection",
-                     ),                     
-             ))  
+                     ),
+             ))
              ->add('url_title', 'text', array(
                      "label" => 'pi.form.label.field.title',
                      "label_attr" => array(
@@ -288,27 +289,27 @@ class BlockType extends AbstractType
         }
         if ($is_media) {
              $builder
-             //->add('media', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "simpleLink", 'pi.form.label.media.picture'));
+             //->add('media', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "simpleLink", 'pi.form.label.media.picture'));
              ->add('media', 'entity', array(
              		'class' => 'SfynxMediaBundle:Mediatheque',
             		'query_builder' => function(EntityRepository $er) use ($id_media) {
-                            $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                            $translatableListener->setTranslationFallback(true);            			
-                            return $er->createQueryBuilder('a')
-                            ->select('a')
-                            ->where("a.id IN (:id)")
-                            ->setParameter('id', $id_media)
-                            //->where("a.status = 'image'")
-                            //->andWhere("a.image IS NOT NULL")
-                            //->andWhere("a.enabled = 1")
-                            //->orderBy('a.id', 'ASC')
-                            ;
+                        $translatableListener = $this->_container->get('gedmo.listener.translatable');
+                        $translatableListener->setTranslationFallback(true);
+                        return $er->createQueryBuilder('a')
+                        ->select('a')
+                        ->where("a.id IN (:id)")
+                        ->setParameter('id', $id_media)
+                        //->where("a.status = 'image'")
+                        //->andWhere("a.image IS NOT NULL")
+                        //->andWhere("a.enabled = 1")
+                        //->orderBy('a.id', 'ASC')
+                        ;
             		},
             		//'property' => 'id',
             		'empty_value' => 'pi.form.label.select.choose.media',
             		'label' => "Media",
             		'multiple' => false,
-                            'required'  => false,
+                    'required'  => false,
              		'constraints' => array(
                             //new Constraints\NotBlank(),
              		),
@@ -317,29 +318,29 @@ class BlockType extends AbstractType
             		),
             		"attr" => array(
                             "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_selectentity_ajax", array('type'=>'image')),
+                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_selectentity_ajax", array('type'=>'image')),
                             "data-selectid" => $id_media,
                             "data-max" => 50,
             		),
             		'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
              				title="Ajouter une image à la médiatheque"
              				data-title="Mediatheque"
-             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
+             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
              				data-selectid="#sfynx_mediabundle_mediatype_id"
              				data-selecttitle="#sfynx_mediabundle_mediatype_title"
              				data-insertid="#piapp_gedmobundle_blocktype_media"
              				data-inserttype="multiselect"
-             				></a>',            		
-             )) 
+             				></a>',
+             ))
              ;
          } else {
              $builder
-             //->add('media', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "hidden", 'pi.form.label.media.picture'));
+             //->add('media', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "hidden", 'pi.form.label.media.picture'));
              ->add('media', 'entity', array(
              		'class' => 'SfynxMediaBundle:Mediatheque',
             		'query_builder' => function(EntityRepository $er) use ($id_media) {
                             $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                            $translatableListener->setTranslationFallback(true);            			
+                            $translatableListener->setTranslationFallback(true);
                             return $er->createQueryBuilder('a')
                             ->select('a')
                             ->where("a.id IN (:id)")
@@ -353,15 +354,15 @@ class BlockType extends AbstractType
              		),
              ));
          }
-                                               
+
          if ($is_media1) {
              $builder
-             //->add('media1', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "simpleLink", 'pi.form.label.media.picture'));
+             //->add('media1', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "simpleLink", 'pi.form.label.media.picture'));
              ->add('media1', 'entity', array(
              		'class' => 'SfynxMediaBundle:Mediatheque',
             		'query_builder' => function(EntityRepository $er) use ($id_media1) {
                             $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                            $translatableListener->setTranslationFallback(true);            			
+                            $translatableListener->setTranslationFallback(true);
                             return $er->createQueryBuilder('a')
                             ->select('a')
                             ->where("a.id IN (:id)")
@@ -385,29 +386,29 @@ class BlockType extends AbstractType
             		),
             		"attr" => array(
                             "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_selectentity_ajax", array('type'=>'image')),
+                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_selectentity_ajax", array('type'=>'image')),
                             "data-selectid" => $id_media1,
                             "data-max" => 50,
             		),
             		'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
              				title="Ajouter une image à la médiatheque"
              				data-title="Mediatheque"
-             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
+             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
              				data-selectid="#sfynx_mediabundle_mediatype_id"
              				data-selecttitle="#sfynx_mediabundle_mediatype_title"
              				data-insertid="#piapp_gedmobundle_blocktype_media1"
              				data-inserttype="multiselect"
-             				></a>',            		
-            )) 
+             				></a>',
+            ))
              ;
          } else {
              $builder
-             //->add('media1', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "hidden", 'pi.form.label.media.picture'));
+             //->add('media1', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'image_collection', "hidden", 'pi.form.label.media.picture'));
              ->add('media1', 'entity', array(
                     'class' => 'SfynxMediaBundle:Mediatheque',
                     'query_builder' => function(EntityRepository $er) use ($id_media1) {
                         $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                        $translatableListener->setTranslationFallback(true);            			
+                        $translatableListener->setTranslationFallback(true);
                         return $er->createQueryBuilder('a')
                         ->select('a')
                         ->where("a.id IN (:id)")
@@ -423,15 +424,15 @@ class BlockType extends AbstractType
          }
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'piapp_gedmobundle_blocktype';
     }
-    
-    public function setDefaultOptions(OptionsResolverInterface $resolver)
+
+    public function configureOptions(OptionsResolver $resolver)
     {
     	$resolver->setDefaults(array(
-            'data_class' => 'PiApp\GedmoBundle\Entity\Block',
+            'data_class' => 'PiApp\GedmoBundle\Layers\Domain\Entity\Block',
     	));
     }
 }

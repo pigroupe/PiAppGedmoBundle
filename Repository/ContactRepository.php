@@ -11,7 +11,7 @@
 namespace PiApp\GedmoBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
-use Sfynx\CoreBundle\Repository\TranslationRepository;
+use Sfynx\CoreBundle\Layers\Infrastructure\Persistence\Adapter\Generalisation\Orm\Traits\TraitTranslation;
 
 /**
  * Contact Repository
@@ -24,6 +24,7 @@ use Sfynx\CoreBundle\Repository\TranslationRepository;
  *
  * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
  */
-class ContactRepository extends TranslationRepository
+class ContactRepository extends EntityRepository
 {
+    use TraitTranslation;
 }

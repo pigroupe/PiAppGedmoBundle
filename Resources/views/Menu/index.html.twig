@@ -1,13 +1,13 @@
 {% initJquery 'GRID:grid-table' %}
 {% if app.request.query.get('NoLayout') %}
-	{% set layout_nav = getParameter('sfynx.auth.theme.layout.ajax') %}
+	{% set layout_nav = getParameter('sfynx.template.theme.layout.ajax') %}
 {% else %}
 	{% set layout_nav = app.request.attributes.get('sfynx-layout') %}
 {% endif %}	
 {% extends layout_nav %}
 
 {% block title %}
-	<h1><a href="{{ path('admin_redirection') }}">{{ "pi.home"|trans }}</a> > {{ 'pi.menu.title'|trans }}</h1>
+	<h1><a href="{{ path('admin_redirection') }}">{{ "pi.home"|trans }}</a> > <a href="{{ path_url('admin_gedmo_menu_tree', { 'category': '', 'NoLayout': NoLayout}) }}">{{ 'pi.menu.title'|trans }}</a> </h1>
 {% endblock %}
  
 {% block content %}
@@ -21,7 +21,7 @@
 	</div>
 	<!-- end actions-box........... -->
 	
-	{% include getParameter('sfynx.auth.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-header.html.twig" %}
+	{% include getParameter('sfynx.template.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-header.html.twig" %}
 	<table id="grid_menu" class="grid" >
 	    <thead>
 	        <tr>	   
@@ -62,7 +62,7 @@
 	    {% endfor %}
 	    </tbody>
 	</table>
-	{% include getParameter('sfynx.auth.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-footer.html.twig" %}
+	{% include getParameter('sfynx.template.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-footer.html.twig" %}
 	
 {% endblock %}
 

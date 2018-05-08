@@ -14,7 +14,8 @@ namespace PiApp\GedmoBundle\Manager\FormBuilder;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
-use Sfynx\CmfBundle\Manager\PiFormBuilderManager;
+use Sfynx\CmfBundle\Layers\Domain\Service\Manager\PiFormBuilderManager;
+use \Sfynx\CmfBundle\Layers\Domain\Service\Util\PiWidget\Gedmo\OrganigramHandler;
 use PiApp\GedmoBundle\Manager\FormBuilder\PiModelWidgetSlideCollectionType;
 use PiApp\GedmoBundle\Manager\FormBuilder\PiModelWidgetSearchFieldsType;
         
@@ -88,16 +89,21 @@ class PiModelWidgetOrganigram extends PiFormBuilderManager
         // we get all entities
         //$listTableClasses = $this->container->get('sfynx.database.db')->listTables('table_class');
         //$listTableClasses = array_combine($listTableClasses, $listTableClasses);
-        $ListsAvailableEntities = \Sfynx\CmfBundle\Util\PiWidget\PiGedmoManager::getAvailableOrganigram();
+        $ListsAvailableEntities = OrganigramHandler::getAvailable();
         $ListsAvailableEntities = array_combine(array_keys($ListsAvailableEntities), array_keys($ListsAvailableEntities));
         // we get all slide templates
-        $listFiles = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle("/Resources/views/Template/Organigram");
-        $listFiles = array_map(function($value) {
-        	return basename($value);
+        $listFiles = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle('/Resources/views/Template/Organigram', 'twig', 'templating');
+        $listFiles_ = array_map(function($value) {
+            $arr = explode(':', $value);
+            return end($arr);
         }, array_values($listFiles));
-        $listFiles = array_combine($listFiles, $listFiles);
-        //
-        $css = array();
+        $listFiles = array_combine($listFiles, $listFiles_);
+        // we get all css files
+        $listCss = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle('/Resources/public/css/widget/organigram', 'css', 'assetic');
+        $listCss_ = array_map(function($value) {
+            return basename($value);
+        }, array_values($listCss));
+        $listCss = array_combine($listCss, $listCss_);
         // actions
         $actions = array(
                 'org-chart-page' => 'Organigram par défault',
@@ -121,7 +127,7 @@ class PiModelWidgetOrganigram extends PiFormBuilderManager
         ->add('template', 'choice', array(
         		'choices'   => $listFiles,
         		'multiple'    => false,
-        		'required'  => true,
+        		'required'  => false,
                 'expanded' => false,
         		'label' => 'pi.form.label.select.choose.template',
         		"attr" => array(
@@ -129,7 +135,7 @@ class PiModelWidgetOrganigram extends PiFormBuilderManager
         		),
         ))   
         ->add('css', 'choice', array(
-        		'choices'   => $css,
+        		'choices'   => $listCss,
         		'multiple'    => true,
         		'required'  => false,
         		'expanded' => false,
@@ -194,7 +200,7 @@ class PiModelWidgetOrganigram extends PiFormBuilderManager
         		'prototype'    => true,
         		// Post update
         		'by_reference' => true,
-        		'type'   => new PiModelWidgetSearchFieldsType($this->_locale, $this->_container),
+        		'type'   => new PiModelWidgetSearchFieldsType($this->_locale, $this->container),
         		'options'  => array(
         				'attr'      => array('class' => 'collection_widget')
         		),
@@ -309,30 +315,29 @@ class PiModelWidgetOrganigram extends PiFormBuilderManager
         foreach ($data['css'] as $css) {
             $AllCss[] = $css;
         }
-        
-        return
-        array(
-                'plugin'    => 'gedmo',
-                'action'    => 'organigram',
-                'xml'         => Array (
-                        "widgets"     => Array (
-                                'css' => $AllCss,
-                                "gedmo"        => Array (
-                                        "controller"        => $data['table'].':'.$data['action'],
-                                        "params"    => array(
-                                            'template' => $data['template'],
-                                            'enabledonly' => $data['enabled'],
-                                            'category' => $data['category'],
-                                            'node' => $data['node'],
-                                            'organigram' => array(
-                                                'query_function'  => $data['query_function'],
-                                                'searchFields' => $data['navigationsearchfields'],
-                                            )
-                                        )
-                                )
+
+        return [
+            'plugin' => 'gedmo',
+            'action' => 'organigram',
+            'xml'    => Array (
+                "widgets" => Array (
+                    'css' => $AllCss,
+                    "gedmo" => Array (
+                        "controller" => $data['table'].':'.$data['action'],
+                        "params" => array(
+                            'template' => $data['template'],
+                            'enabledonly' => $data['enabled'],
+                            'category' => $data['category'],
+                            'node' => $data['node'],
+                            'organigram' => array(
+                                'query_function' => $data['query_function'],
+                                'searchFields' => $data['navigationsearchfields'],
+                            )
                         )
-                ),
-        );
+                    )
+                )
+            ),
+        ];
     }        
 
 }
