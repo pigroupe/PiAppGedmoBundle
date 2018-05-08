@@ -1,4 +1,4 @@
-	<form action="{{ path('admin_gedmo_menu_node_create', {'category':category}) }}" method="post" {{ form_enctype(form) }} novalidate >
+	{{ form_start(form, {'action': path('admin_gedmo_menu_node_create', {'category':category}), 'method': 'POST', 'attr': {'novalidate': 'novalidate', 'enctype': 'application/x-www-form-urlencoded'}}) }}
 		<table>
 		    <tr>
 				{{ form_errors(form) }}
@@ -31,4 +31,4 @@
 				</td>				
 		    </tr>
 		</table>
-	</form>
+    {{ form_end(form) }}

@@ -10,12 +10,12 @@
  * For the full copyright and license information, please view the LICENSE
  * file that was distributed with this source code.
  */
-namespace PiApp\GedmoBundle\Manager\FormBuilder;  
+namespace PiApp\GedmoBundle\Manager\FormBuilder;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
-use Sfynx\CmfBundle\Manager\PiFormBuilderManager;
-        
+use Sfynx\CmfBundle\Layers\Domain\Service\Manager\PiFormBuilderManager;
+
 /**
 * Description of the Form builder manager
 *
@@ -30,7 +30,7 @@ class PiModelWidgetContent extends PiFormBuilderManager
      * Type form name.
      */
     const FORM_TYPE_NAME = 'symfony';
-    
+
     /**
      * Template form name.
      */
@@ -39,20 +39,20 @@ class PiModelWidgetContent extends PiFormBuilderManager
     /**
      * Form name.
      */
-    const FORM_NAME = 'formbuilder';    
-    
+    const FORM_NAME = 'formbuilder';
+
     /**
      * Constructor.
      *
      * @param \Symfony\Component\DependencyInjection\ContainerInterface
-     * 
+     *
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function __construct(ContainerInterface $containerService)
     {
         parent::__construct($containerService, 'WIDGET', 'content', $this::FORM_TYPE_NAME, $this::FORM_DECORATOR, $this::FORM_NAME);
     }
-    
+
     /**
      * Return list of available content types for all type pages.
      *
@@ -78,22 +78,22 @@ class PiModelWidgetContent extends PiFormBuilderManager
      * @return string
      *
      * @author (c) Etienne de Longeaux <etienne_delongeaux@hotmail.com>
-     */    
+     */
     public function buildForm(FormBuilderInterface $builder, array $options)
-    {   
+    {
         $query        = $this->_em->getRepository("PiAppGedmoBundle:Content")->getAllByCategory('', null, "DESC", '', true)->getQuery();
         $choiceList = $this->_em->getRepository("PiAppGedmoBundle:Content")->findTranslationsByQuery($this->_locale, $query, 'object', false);
-        
-        $result     = array();
-        $categories = array();
+
+        $result     = [];
+        $categories = [];
         if (is_array($choiceList)) {
             foreach ($choiceList as $key => $field) {
                 $desc = $field->getDescriptif ();
                 $cat  = $field->getCategory();
-                
-                if ($cat instanceof \PiApp\GedmoBundle\Entity\Category)
+
+                if ($cat instanceof \PiApp\GedmoBundle\Layers\Domain\Entity\Category)
                     $categories[ $cat->getId() ] = $cat->getName();
-                
+
                 if (!empty($desc) && !empty($cat))
                     $result[ $field->getId() ] = $field->getCategory() .  " >> " . $field->getDescriptif () . ' ('.$field->getId().')';
                 elseif (!empty($desc))
@@ -113,7 +113,7 @@ class PiModelWidgetContent extends PiFormBuilderManager
                     "label_attr" => array(
                             "class"=>"select_choice",
                     ),
-            )) 
+            ))
             ->add('id_content', 'choice', array(
                     'choices'   => $result,
                     'multiple'    => false,
@@ -172,7 +172,7 @@ class PiModelWidgetContent extends PiFormBuilderManager
                     "label_attr" => array(
                             "class"=>"content_collection",
                     ),
-             ))  
+             ))
              ->add('content', 'textarea', array(
                     "attr" => array(
                             "class"    =>"pi_editor",
@@ -182,10 +182,10 @@ class PiModelWidgetContent extends PiFormBuilderManager
                      "label_attr" => array(
                              "class"=>"content_collection",
                      ),
-            ))  
+            ))
             ;
     }
-    
+
     /**
      * Sets JS script.
      *
@@ -198,8 +198,8 @@ class PiModelWidgetContent extends PiFormBuilderManager
     public function renderScript(array $option) {
         // We open the buffer.
         ob_start ();
-        ?>                        
-            jQuery(document).ready(function(){        
+        ?>
+            jQuery(document).ready(function(){
                 var  create_content_form  = $(".content_collection");
                 var  insert_content_form  = $(".insert_collection");
 
@@ -237,19 +237,19 @@ class PiModelWidgetContent extends PiFormBuilderManager
                         $("#piappgedmobundlemanagerformbuilderpimodelwidgetcontent_descriptif").removeAttr("required");
                     }
                    });
-                                      
+
             });
-        <?php 
+        <?php
         // We retrieve the contents of the buffer.
         $_content_js = ob_get_contents ();
         // We clean the buffer.
         ob_clean ();
         // We close the buffer.
         ob_end_flush ();
-        
+
         return  $this->container->get('sfynx.tool.script_manager')->renderScript($_content_js, "", 'formbuilder/default/content/');
-    }            
-    
+    }
+
     /**
      *
      *
@@ -259,9 +259,9 @@ class PiModelWidgetContent extends PiFormBuilderManager
      * @author (c) Etienne de Longeaux <etienne_delongeaux@hotmail.com>
      */
     public function preEventBindRequest(){
-        $this->_createentity    =     new  \PiApp\GedmoBundle\Entity\Content();
-    }    
-    
+        $this->_createentity    =     new  \PiApp\GedmoBundle\Layers\Domain\Entity\Content();
+    }
+
     /**
      *
      *
@@ -273,23 +273,23 @@ class PiModelWidgetContent extends PiFormBuilderManager
     public function preEventActionForm(array $data){
         if ($data["choice"] == "create"){
             $this->_createentity->setEnabled(true);
-            
-            if (!empty($this->_data['category']) || !is_null($this->_data['category'])){
+
+            if (!empty($this->_data['category']) || !(null === $this->_data['category'])){
                 $category = $this->_em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($this->_locale, $this->_data['category'], 'object');
-                
-                if ($category instanceof \PiApp\GedmoBundle\Entity\Category)
+
+                if ($category instanceof \PiApp\GedmoBundle\Layers\Domain\Entity\Category)
                     $this->_createentity->setCategory();
             }
-            
+
             $this->_createentity->setDescriptif ($this->_data['descriptif']);
             $this->_createentity->setContent($this->_data['content']);
             $this->_createentity->setPublishedAt(new \DateTime());
-            $this->_createentity->setCreatedAt(new \DateTime());            
-            
+            $this->_createentity->setCreatedAt(new \DateTime());
+
             $this->_createentity->setTranslatableLocale($this->_locale);
             $this->_em->persist($this->_createentity);
             $this->_em->flush();
-            
+
             $this->_data['id_content'] = $this->_createentity->getId();
         }
     }
@@ -302,7 +302,7 @@ class PiModelWidgetContent extends PiFormBuilderManager
      *
      * @author (c) Etienne de Longeaux <etienne_delongeaux@hotmail.com>
      */
-    public function postEventActionForm(array $data){}    
+    public function postEventActionForm(array $data){}
 
     /**
      *
@@ -330,5 +330,5 @@ class PiModelWidgetContent extends PiFormBuilderManager
                         )
                 ),
         );
-    }    
+    }
 }

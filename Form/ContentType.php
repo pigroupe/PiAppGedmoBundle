@@ -123,14 +123,14 @@ class ContentType extends AbstractType
                     'required'  => false,
                     "attr" => array(
                         "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_selectentity_ajax", array('type'=> 3)),
+                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_selectentity_ajax", array('type'=> 3)),
                         "data-selectid" => $id_category,
                         "data-max" => 50,
                     ),
                     'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
                                     title="Ajouter une catégorie"
                                     data-title="Catégorie"
-                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 3)).'"
+                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 3)).'"
                                     data-selectid="#piapp_gedmobundle_categorytype_id"
                                     data-selecttitle="#piapp_gedmobundle_categorytype_name"
                                     data-insertid="#piapp_gedmobundle_contenttype_category"
@@ -181,7 +181,7 @@ class ContentType extends AbstractType
         ;
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'piapp_gedmobundle_contenttype';
     }

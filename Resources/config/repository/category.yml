@@ -1,0 +1,22 @@
+parameters:
+    # Manager class
+    sfynx.gedmo.manager.category.entity.class: PiApp\GedmoBundle\Layers\Domain\Service\Entity\Category\Manager\EntityManager
+    # Adapter factory class
+    sfynx.gedmo.factory.category.class: Sfynx\CoreBundle\Layers\Infrastructure\Persistence\Factory\MultiAdapterFactory
+    # Entity class value
+    sfynx.gedmo.manager.category.params:
+      class: '%sfynx.gedmo.category_class%'
+    # Reposioty names
+    sfynx.gedmo.repository.category.orm.command.class: PiApp\GedmoBundle\Layers\Infrastructure\Persistence\Adapter\Command\Orm\CategoryRepository
+    sfynx.gedmo.repository.category.orm.query.class: PiApp\GedmoBundle\Layers\Infrastructure\Persistence\Adapter\Query\Orm\CategoryRepository
+
+services:
+    #
+    # configuration of the user manager working with Orm, Odm, Couchdb
+    #
+    sfynx.gedmo.manager.category.entity:
+        class: '%sfynx.gedmo.manager.category.entity.class%'
+        arguments:
+            - '@sfynx.gedmo.factory.category'
+        calls:
+            - [ setParams, [ '%sfynx.gedmo.manager.category.params%' ] ]

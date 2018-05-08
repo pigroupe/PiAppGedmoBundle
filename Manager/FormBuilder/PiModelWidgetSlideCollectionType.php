@@ -98,7 +98,7 @@ class PiModelWidgetSlideCollectionType extends AbstractType
         
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'piapp_adminbundle_enquirytype';
     }

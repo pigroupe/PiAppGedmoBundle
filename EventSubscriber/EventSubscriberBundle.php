@@ -31,81 +31,81 @@ class EventSubscriberBundle  extends abstractTriggerListener implements EventSub
 {
     /**
      * Constructor
-     * 
+     *
      * @param ContainerInterface $container
      */
     public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
-        
-        if (class_exists('Sfynx\MediaBundle\Entity\Mediatheque')) {
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'contact1',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Contact',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media'
-            ));  
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'contact2',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Contact',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media1'
-            ));  
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'menu',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Menu',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media'
-            ));  
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'slider',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Slider',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media'
-            ));     
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'block',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Block',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media'
-            ));  
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'block2',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Block',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media1'
-            ));  
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'organigram',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Organigram',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media'
-            )); 
-            $this->addAssociation('Sfynx\MediaBundle\Entity\Mediatheque', 'mapOneToMany', array(
-                'fieldName'     => 'entitycategory',
-                'targetEntity'  => 'PiApp\GedmoBundle\Entity\Category',
-                'cascade'       => array(
-                    'persist',
-                ),
-                'mappedBy'      => 'media'
-            ));             
-        }         
+
+//        if (class_exists('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque')) {
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'contact1',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Contact',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'contact2',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Contact',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media1'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'menu',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Menu',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'slider',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Slider',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'block',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Block',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'block2',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Block',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media1'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'organigram',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Organigram',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media'
+//            ));
+//            $this->addAssociation('Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque', 'mapOneToMany', array(
+//                'fieldName'     => 'entitycategory',
+//                'targetEntity'  => 'PiApp\GedmoBundle\Layers\Domain\Entity\Category',
+//                'cascade'       => array(
+//                    'persist',
+//                ),
+//                'mappedBy'      => 'media'
+//            ));
+//        }
     }
-    
+
     /**
      * @return array
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
@@ -119,7 +119,7 @@ class EventSubscriberBundle  extends abstractTriggerListener implements EventSub
 
     /**
      * @param EventArgs $args
-     * 
+     *
      * @return void
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */

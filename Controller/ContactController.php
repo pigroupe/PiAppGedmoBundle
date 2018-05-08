@@ -14,7 +14,7 @@ namespace PiApp\GedmoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sfynx\CoreBundle\Controller\abstractController;
-use Sfynx\ToolBundle\Exception\ControllerException;
+use Sfynx\CoreBundle\Layers\Infrastructure\Exception\ControllerException;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,9 +25,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use JMS\SecurityExtraBundle\Annotation\PreAuthorize;
 
-use PiApp\GedmoBundle\Entity\Contact;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Contact;
 use PiApp\GedmoBundle\Form\ContactType;
-use PiApp\GedmoBundle\Entity\Translation\ContactTranslation;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Translation\ContactTranslation;
 
 /**
  * Contact controller.
@@ -48,7 +48,7 @@ class ContactController extends abstractController
      * @Route("/admin/gedmo/contact/enabled", name="admin_gedmo_contact_enabledentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
@@ -59,18 +59,18 @@ class ContactController extends abstractController
 
     /**
      * Disable Contact entities.
-     * 
+     *
      * @Route("/admin/gedmo/contact/disable", name="admin_gedmo_contact_disablentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function disableajaxAction()
     {
         return parent::disableajaxAction();
-    } 
+    }
 
     /**
      * Change the position of a Contact entity.
@@ -78,14 +78,14 @@ class ContactController extends abstractController
      * @Route("/admin/gedmo/contact/position", name="admin_gedmo_contact_position_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function positionajaxAction()
     {
         return parent::positionajaxAction();
-    }   
+    }
 
     /**
      * Delete a Contact entity.
@@ -93,15 +93,15 @@ class ContactController extends abstractController
      * @Route("/admin/gedmo/contact/delete", name="admin_gedmo_contact_deletentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function deleteajaxAction()
     {
         return parent::deletajaxAction();
-    } 
-    
+    }
+
     /**
      * Archive a Contact entity.
      *
@@ -115,8 +115,8 @@ class ContactController extends abstractController
     public function archiveajaxAction()
     {
         return parent::archiveajaxAction();
-    }    
-      
+    }
+
     /**
      * Lists all Contact entities.
      *
@@ -124,15 +124,15 @@ class ContactController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>   
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function indexAction()
     {
         $em            = $this->getDoctrine()->getManager();
-        $locale        = $this->container->get('request')->getLocale();
-        $entities    = $em->getRepository("PiAppGedmoBundle:Contact")->findAllByEntity($locale, 'object');        
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $locale        = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $entities    = $em->getRepository("PiAppGedmoBundle:Contact")->findAllByEntity($locale, 'object');
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
         if (!$NoLayout)     $template = "index.html.twig"; else $template = "index.html.twig";
 
         return $this->render("PiAppGedmoBundle:Contact:$template", array(
@@ -148,16 +148,16 @@ class ContactController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function showAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Contact")->findOneByEntity($locale, $id, 'object');
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show.html.twig";        
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show.html.twig";
 
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Contact');
@@ -180,23 +180,23 @@ class ContactController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function newAction()
     {
         $em     = $this->getDoctrine()->getManager();
         $entity = new Contact();
         $form   = $this->createForm(new ContactType($em, $this->container), $entity, array('show_legend' => false));
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        $category   = $this->container->get('request')->query->get('category', '');
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category', '');
         if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";
 
         $entity_cat = $em->getRepository("PiAppGedmoBundle:Category")->find($category);
-        if ( !empty($category) && ($entity_cat instanceof \PiApp\GedmoBundle\Entity\Category))
+        if ( !empty($category) && ($entity_cat instanceof \PiApp\GedmoBundle\Layers\Domain\Entity\Category))
             $entity->setCategory($entity_cat);
         elseif (!empty($category))
-            $entity->setCategory($category);        
+            $entity->setCategory($category);
 
         return $this->render("PiAppGedmoBundle:Contact:$template", array(
             'entity' => $entity,
@@ -212,16 +212,16 @@ class ContactController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function createAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";        
-    
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";
+
         $entity  = new Contact();
         $request = $this->getRequest();
         $form    = $this->createForm(new ContactType($em, $this->container), $entity, array('show_legend' => false));
@@ -233,7 +233,7 @@ class ContactController extends abstractController
             $em->flush();
 
             return $this->redirect($this->generateUrl('admin_gedmo_contact_show', array('id' => $entity->getId(), 'NoLayout' => $NoLayout)));
-                        
+
         }
 
         return $this->render("PiAppGedmoBundle:Contact:$template", array(
@@ -250,20 +250,20 @@ class ContactController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function editAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Contact")->findOneByEntity($locale, $id, 'object');
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";        
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Contact")->find($id);
-            $entity->addTranslation(new ContactTranslation($locale));            
+            $entity->addTranslation(new ContactTranslation($locale));
         }
 
         $editForm   = $this->createForm(new ContactType($em, $this->container), $entity, array('show_legend' => false));
@@ -284,16 +284,16 @@ class ContactController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>   
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function updateAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $entity = $em->getRepository("PiAppGedmoBundle:Contact")->findOneByEntity($locale, $id, "object"); 
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";        
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $entity = $em->getRepository("PiAppGedmoBundle:Contact")->findOneByEntity($locale, $id, "object");
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Contact")->find($id);
@@ -324,17 +324,17 @@ class ContactController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
-     *     
+     *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function deleteAction($id)
     {
         $em      = $this->getDoctrine()->getManager();
-        $locale     = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');        
-    
+        $locale     = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         $form      = $this->createDeleteForm($id);
         $request = $this->getRequest();
 
@@ -351,15 +351,15 @@ class ContactController extends abstractController
                 $em->remove($entity);
                 $em->flush();
             } catch (\Exception $e) {
-                $this->container->get('request')->getSession()->getFlashBag()->clear();
-                $this->container->get('request')->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->clear();
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
             }
         }
 
         return $this->redirect($this->generateUrl('admin_gedmo_contact', array('NoLayout' => $NoLayout)));
     }
 
-    private function createDeleteForm($id)
+    protected function createDeleteForm($id)
     {
         return $this->createFormBuilder(array('id' => $id))
             ->add('id', 'hidden')
@@ -369,29 +369,29 @@ class ContactController extends abstractController
 
     /**
      * Template : Finds and displays a Contact entity.
-     * 
+     *
      * @Cache(maxage="86400")
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_showAction($id, $template = '_tmp_show.html.twig', $lang = "")
     {
         $em     = $this->getDoctrine()->getManager();
-        
+
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-            
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $entity = $em->getRepository("PiAppGedmoBundle:Contact")->findOneByEntity($lang, $id, 'object', false);
-        
+
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Contact');
         }
-        
+
         if (method_exists($entity, "getTemplate") && $entity->getTemplate() != "")
-            $template = $entity->getTemplate();         
-    
+            $template = $entity->getTemplate();
+
         return $this->render("PiAppGedmoBundle:Contact:$template", array(
                 'entity'    => $entity,
                 'locale'    => $lang,
@@ -400,28 +400,28 @@ class ContactController extends abstractController
 
     /**
      * Template : Finds and displays a list of Contact entity.
-     * 
+     *
      * @Cache(maxage="86400")
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_listAction($category = '', $MaxResults = null, $template = '_tmp_list.html.twig', $order = 'DESC', $lang = "")
     {
         $em         = $this->getDoctrine()->getManager();
 
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-            
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $query        = $em->getRepository("PiAppGedmoBundle:Contact")->getAllByCategory($category, $MaxResults, $order)->getQuery();
-        $entities   = $em->getRepository("PiAppGedmoBundle:Contact")->findTranslationsByQuery($lang, $query, 'object', false);                   
+        $entities   = $em->getRepository("PiAppGedmoBundle:Contact")->findTranslationsByQuery($lang, $query, 'object', false);
 
         return $this->render("PiAppGedmoBundle:Contact:$template", array(
             'entities' => $entities,
             'cat'       => ucfirst($category),
             'locale'   => $lang,
         ));
-    }     
-    
+    }
+
 }

@@ -33,17 +33,17 @@ class ContactType extends AbstractType
      * @var \Doctrine\ORM\EntityManager
      */
     protected $_em;
-    
+
     /**
      * @var \Symfony\Component\DependencyInjection\ContainerInterface
      */
-    protected $_container;    
-    
+    protected $_container;
+
     /**
      * @var string
      */
-    protected $_locale;    
-    
+    protected $_locale;
+
     /**
      * Constructor.
      *
@@ -54,10 +54,10 @@ class ContactType extends AbstractType
     public function __construct(EntityManager $em, ContainerInterface $container)
     {
         $this->_em             = $em;
-        $this->_locale        = $container->get('request')->getLocale();
+        $this->_locale        = $container->get('request_stack')->getCurrentRequest()->getLocale();
         $this->_container     = $container;
     }
-        
+
     public function buildForm(FormBuilderInterface $builder, array $options)
     {
         $id_category = null;
@@ -68,13 +68,13 @@ class ContactType extends AbstractType
         }
         if (isset($_POST['piapp_gedmobundle_contacttype']['category'])) {
             $id_category = $_POST['piapp_gedmobundle_contacttype']['category'];
-        }  
+        }
         //
         $id_media = null;
         $id_media1 = null;
         // get the id of media
         if ($builder->getData()->getMedia()
-                instanceof \Sfynx\MediaBundle\Entity\Mediatheque
+                instanceof \Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque
         ) {
             $id_media = $builder->getData()->getMedia()->getId();
         }
@@ -82,16 +82,16 @@ class ContactType extends AbstractType
             $id_media = $_POST['piapp_gedmobundle_contacttype']['media'];
         }
         // get the id of media1
-        if ($builder->getData()->getMedia1() 
-                instanceof \Sfynx\MediaBundle\Entity\Mediatheque
+        if ($builder->getData()->getMedia1()
+                instanceof \Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque
         ) {
             $id_media1 = $builder->getData()->getMedia1()->getId();
         }
         if (isset($_POST['piapp_gedmobundle_contacttype']['media1'])) {
             $id_media1 = $_POST['piapp_gedmobundle_contacttype']['media1'];
-        }  
-        
-        $builder             
+        }
+
+        $builder
              ->add('enabled', 'checkbox', array(
                      'data'  => true,
                      'label'    => 'pi.form.label.field.enabled',
@@ -115,20 +115,20 @@ class ContactType extends AbstractType
                     'required'  => false,
                     "attr" => array(
                         "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_selectentity_ajax", array('type'=> 0)),
+                        "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_selectentity_ajax", array('type'=> 0)),
                         "data-selectid" => $id_category,
                         "data-max" => 50,
                     ),
                     'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
                                     title="Ajouter une catégorie"
                                     data-title="Catégorie"
-                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 0)).'"
+                                    data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("admin_gedmo_category_new", array("NoLayout"=>"false", 'type'=> 0)).'"
                                     data-selectid="#piapp_gedmobundle_categorytype_id"
                                     data-selecttitle="#piapp_gedmobundle_categorytype_name"
                                     data-insertid="#piapp_gedmobundle_contacttype_category"
                                     data-inserttype="multiselect"
-                                    ></a>', 
-             ))             
+                                    ></a>',
+             ))
              ->add('title', 'text', array(
                      'label'        => "pi.form.label.field.title",
                      'required'  => false,
@@ -142,7 +142,7 @@ class ContactType extends AbstractType
                              "class"    =>"pi_editor_simple_easy",
                      ),
                      'required'  => false,
-             ))            
+             ))
              ->add('coordinates', 'text', array(
                     "label" => 'pi.form.label.field.adress.coordinates',
                     'required'  => false,
@@ -163,10 +163,10 @@ class ContactType extends AbstractType
                            'pattern' => "/^[[:alpha:]\s'\x22\-_&@!?()\[\]-]*$/u",
                            'message' => 'erreur.regex.nickname',
                        )),
-                    ),                 
-             ))             
-             
-             
+                    ),
+             ))
+
+
             ->add('address', 'textarea', array(
                      "label" => 'pi.form.label.field.adress.main',
                      "label_attr" => array(
@@ -191,7 +191,7 @@ class ContactType extends AbstractType
                         'message' => 'erreur.regex.cp',
                     )),
                 ),
-            ))      
+            ))
             ->add('city', 'text', array(
                      "label" => 'pi.form.label.field.adress.city',
                      "label_attr" => array(
@@ -201,7 +201,7 @@ class ContactType extends AbstractType
                              "class"    =>"pi_editor_simple_easy",
                      ),
                      'required'  => false,
-            ))  
+            ))
             ->add('country', 'text', array(
                     "label" => 'pi.form.label.field.adress.city',
                     "label_attr" => array(
@@ -211,7 +211,7 @@ class ContactType extends AbstractType
                         "class"    =>"pi_editor_simple_easy",
                     ),
                     'required'  => false,
-            ))                               
+            ))
             ->add('phone', 'text', array(
                     "label" => 'pi.form.label.field.adress.phone',
                     "label_attr" => array(
@@ -225,7 +225,7 @@ class ContactType extends AbstractType
                             //'match'   => false,
                             'message' => 'erreur.regex.phone',
                         )),
-                    ),  
+                    ),
             ))
             ->add('mobile', 'text', array(
                     'label' => 'pi.form.label.field.adress.phone.mobile',
@@ -240,8 +240,8 @@ class ContactType extends AbstractType
                             //'match'   => false,
                             'message' => 'erreur.regex.phone',
                         )),
-                    ),            		     		
-            ))                            
+                    ),
+            ))
              ->add('fax', 'text', array(
                      "label" => 'pi.form.label.field.adress.fax',
                      "label_attr" => array(
@@ -249,8 +249,8 @@ class ContactType extends AbstractType
                      ),
                      'required'  => false,
              ))
-                 
-             
+
+
              ->add('email', 'text', array(
                      "label" => 'pi.form.label.field.email',
                      "label_attr" => array(
@@ -259,7 +259,7 @@ class ContactType extends AbstractType
                      'required'  => false,
                      'constraints' => array(
                         new Constraints\Email(),
-                     ),   
+                     ),
              ))
              ->add('email_sender', 'text', array(
                     "label" => 'Nom expéditeur',
@@ -269,8 +269,8 @@ class ContactType extends AbstractType
                     'required'  => false,
                     'constraints' => array(
                         new Constraints\Email(),
-                     ), 
-             ))             
+                     ),
+             ))
              ->add('email_subject', 'text', array(
                      "label" => 'pi.form.label.field.email.subject',
                      "label_attr" => array(
@@ -299,8 +299,8 @@ class ContactType extends AbstractType
                      ),
                      'required'  => false,
              ))
-             
-              
+
+
              ->add('url', 'text', array(
                      "label" => 'pi.form.label.field.url',
                      "label_attr" => array(
@@ -315,13 +315,13 @@ class ContactType extends AbstractType
                      ),
                      'required'  => false,
              ))
-             
-             //->add('media', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'pictures', "simpleLink", 'pi.contact.form.picture.left'))
+
+             //->add('media', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'pictures', "simpleLink", 'pi.contact.form.picture.left'))
              ->add('media', 'entity', array(
              		'class' => 'SfynxMediaBundle:Mediatheque',
             		'query_builder' => function(EntityRepository $er) use ($id_media) {
                             $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                            $translatableListener->setTranslationFallback(true);            			
+                            $translatableListener->setTranslationFallback(true);
                             return $er->createQueryBuilder('a')
                             ->select('a')
                             ->where("a.id IN (:id)")
@@ -345,26 +345,26 @@ class ContactType extends AbstractType
             		),
             		"attr" => array(
                             "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_selectentity_ajax", array('type'=>'image')),
+                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_selectentity_ajax", array('type'=>'image')),
                             "data-selectid" => $id_media,
                             "data-max" => 50,
             		),
             		'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
              				title="Ajouter une image à la médiatheque"
              				data-title="Mediatheque"
-             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
+             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
              				data-selectid="#sfynx_mediabundle_mediatype_id"
              				data-selecttitle="#sfynx_mediabundle_mediatype_title"
              				data-insertid="#piapp_gedmobundle_blocktype_media"
              				data-inserttype="multiselect"
-             				></a>',            		
-             ))                              
-             //->add('media1', new \Sfynx\MediaBundle\Form\MediathequeType($this->_container, $this->_em, 'image', 'pictures', "simpleLink",'pi.contact.form.picture.right'))
+             				></a>',
+             ))
+             //->add('media1', new \Sfynx\MediaBundle\Application\Validation\Type\MediathequeType($this->_container, $this->_em, 'image', 'pictures', "simpleLink",'pi.contact.form.picture.right'))
              ->add('media1', 'entity', array(
              		'class' => 'SfynxMediaBundle:Mediatheque',
             		'query_builder' => function(EntityRepository $er) use ($id_media1) {
                             $translatableListener = $this->_container->get('gedmo.listener.translatable');
-                            $translatableListener->setTranslationFallback(true);            			
+                            $translatableListener->setTranslationFallback(true);
                             return $er->createQueryBuilder('a')
                             ->select('a')
                             ->where("a.id IN (:id)")
@@ -388,26 +388,26 @@ class ContactType extends AbstractType
             		),
             		"attr" => array(
                             "class"=>"pi_simpleselect ajaxselect", // ajaxselect
-                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_selectentity_ajax", array('type'=>'image')),
+                            "data-url"=>$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_selectentity_ajax", array('type'=>'image')),
                             "data-selectid" => $id_media1,
                             "data-max" => 50,
             		),
             		'widget_suffix' => '<a class="button-ui-mediatheque button-ui-dialog"
              				title="Ajouter une image à la médiatheque"
              				data-title="Mediatheque"
-             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->getRoute("admin_gedmo_media_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
+             				data-href="'.$this->_container->get('sfynx.tool.route.factory')->generate("sfynx_media_mediatheque_new", array("NoLayout"=>"false", "category"=>'', 'status'=>'image')).'"
              				data-selectid="#sfynx_mediabundle_mediatype_id"
              				data-selecttitle="#sfynx_mediabundle_mediatype_title"
              				data-insertid="#piapp_gedmobundle_blocktype_media1"
              				data-inserttype="multiselect"
-             				></a>',            		
-            ))                                 
+             				></a>',
+            ))
         ;
     }
 
-    public function getName()
+    public function getBlockPrefix()
     {
         return 'piapp_gedmobundle_contacttype';
     }
-        
+
 }

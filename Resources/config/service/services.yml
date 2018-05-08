@@ -15,7 +15,7 @@ services:
     #
     pi_app_gedmo.event_subscriber.bundle:
         class: %pi_app_gedmo.translation.event_subscriber.bundle.class%
-        arguments: [@service_container]
+        arguments: ['@service_container']
         tags:
             - { name: doctrine.event_subscriber }
             

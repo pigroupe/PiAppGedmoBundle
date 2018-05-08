@@ -13,7 +13,7 @@
 namespace PiApp\GedmoBundle\Repository;
 
 use Doctrine\ORM\EntityRepository;
-use Sfynx\CmfBundle\Repository\CmfTreeRepository;
+use Sfynx\CmfBundle\Layers\Infrastructure\Persistence\Repository\CmfTreeRepository;
 
 /**
  * Activity Repository

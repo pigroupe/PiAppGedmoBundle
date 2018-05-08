@@ -14,7 +14,7 @@ namespace PiApp\GedmoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sfynx\CoreBundle\Controller\abstractController;
-use Sfynx\ToolBundle\Exception\ControllerException;
+use Sfynx\CoreBundle\Layers\Infrastructure\Exception\ControllerException;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,9 +25,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use JMS\SecurityExtraBundle\Annotation\PreAuthorize;
 
-use PiApp\GedmoBundle\Entity\Block;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Block;
 use PiApp\GedmoBundle\Form\BlockType;
-use PiApp\GedmoBundle\Entity\Translation\BlockTranslation;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Translation\BlockTranslation;
 
 /**
  * Block controller.
@@ -41,7 +41,7 @@ use PiApp\GedmoBundle\Entity\Translation\BlockTranslation;
 class BlockController extends abstractController
 {
     protected $_entityName = "PiAppGedmoBundle:Block";
-    
+
     /**
      * Enabled Block entities.
      *
@@ -53,12 +53,12 @@ class BlockController extends abstractController
      */
     public function enabledajaxAction()
     {
-        return parent::enabledajaxAction(); 
+        return parent::enabledajaxAction();
     }
 
     /**
      * Disable Block entities.
-     * 
+     *
      * @Route("/admin/gedmo/block/disable", name="admin_gedmo_block_disablentity_ajax")
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\Response
@@ -68,7 +68,7 @@ class BlockController extends abstractController
     public function disableajaxAction()
     {
         return parent::disableajaxAction();
-    } 
+    }
 
     /**
      * Position Block entities.
@@ -82,8 +82,8 @@ class BlockController extends abstractController
     public function positionajaxAction()
     {
         return parent::positionajaxAction();
-    } 
-    
+    }
+
     /**
      * Delete Block entities.
      *
@@ -96,8 +96,8 @@ class BlockController extends abstractController
     public function deleteajaxAction()
     {
         return parent::deletajaxAction();
-    }    
-    
+    }
+
     /**
      * Archive a Block entity.
      *
@@ -110,8 +110,8 @@ class BlockController extends abstractController
     public function archiveajaxAction()
     {
         return parent::archiveajaxAction();
-    }    
-    
+    }
+
     /**
      * Lists all Block entities.
      *
@@ -122,43 +122,45 @@ class BlockController extends abstractController
      */
     public function indexAction()
     {
-        $em         = $this->getDoctrine()->getManager();
-        $locale        = $this->container->get('request')->getLocale();
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $em      = $this->getDoctrine()->getManager();
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale  = $request->getLocale();
+
+        $category   = $request->query->get('category');
+        $NoLayout   = $request->query->get('NoLayout');
         if (!$NoLayout)     $template = "index.html.twig"; else $template = "index.html.twig";
-        
+
         if ($NoLayout){
             //$entities     = $em->getRepository("PiAppGedmoBundle:Block")->getAllEnableByCatAndByPosition($locale, $category, 'object');
-            $query        = $em->getRepository("PiAppGedmoBundle:Block")->getAllByCategory($category, null, '', 'ASC', false)->getQuery();
-            $entities   = $em->getRepository("PiAppGedmoBundle:Block")->findTranslationsByQuery($locale, $query, 'object', false);
+            $query     = $em->getRepository("PiAppGedmoBundle:Block")->getAllByCategory($category, null, '', 'ASC', false)->getQuery();
+            $entities  = $em->getRepository("PiAppGedmoBundle:Block")->findTranslationsByQuery($locale, $query, 'object', false);
         }else
-            $entities    = $em->getRepository("PiAppGedmoBundle:Block")->findAllByEntity($locale, 'object');
-    
+            $entities  = $em->getRepository("PiAppGedmoBundle:Block")->findAllByEntity($locale, 'object');
+
         return $this->render("PiAppGedmoBundle:Block:$template", array(
                 'entities' => $entities,
                 'NoLayout'    => $NoLayout,
                 'category'    => $category,
         ));
-    }    
-    
+    }
+
     /**
      * Finds and displays a Block entity.
      *
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function showAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale    = $request->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Block")->findOneByEntity($locale, $id, 'object');
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show.html.twig";        
+
+        $NoLayout   = $request->query->get('NoLayout');
+        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show.html.twig";
 
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Block');
@@ -179,25 +181,26 @@ class BlockController extends abstractController
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function newAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale    = $request->getLocale();
+
         $entity = new Block();
         $form   = $this->createForm(new BlockType($em, $locale, $this->container), $entity, array('show_legend' => false));
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        $category   = $this->container->get('request')->query->get('category', '');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";    
+
+        $NoLayout   = $request->query->get('NoLayout');
+        $category   = $request->query->get('category', '');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";
 
         $entity_cat = $em->getRepository("PiAppGedmoBundle:Category")->find($category);
-        if ( !empty($category) && ($entity_cat instanceof \PiApp\GedmoBundle\Entity\Category))
+        if ( !empty($category) && ($entity_cat instanceof \PiApp\GedmoBundle\Layers\Domain\Entity\Category))
             $entity->setCategory($entity_cat);
         elseif (!empty($category))
-            $entity->setCategory($category);        
+            $entity->setCategory($category);
 
         return $this->render("PiAppGedmoBundle:Block:$template", array(
             'entity' => $entity,
@@ -212,18 +215,18 @@ class BlockController extends abstractController
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function createAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";        
-    
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale    = $request->getLocale();
+
+        $NoLayout   = $request->query->get('NoLayout');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";
+
         $entity  = new Block();
-        $request = $this->getRequest();
         $form    = $this->createForm(new BlockType($em, $locale, $this->container), $entity, array('show_legend' => false));
         $form->bind($request);
 
@@ -233,7 +236,7 @@ class BlockController extends abstractController
             $em->flush();
 
             return $this->redirect($this->generateUrl('admin_gedmo_block_show', array('id' => $entity->getId(), 'NoLayout' => $NoLayout)));
-                        
+
         }
 
         return $this->render("PiAppGedmoBundle:Block:$template", array(
@@ -249,31 +252,32 @@ class BlockController extends abstractController
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function editAction($id)
     {
-        $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $entity = $em->getRepository("PiAppGedmoBundle:Block")->findOneByEntity($locale, $id, 'object');
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";        
+        $em      = $this->getDoctrine()->getManager();
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale  = $request->getLocale();
+        $entity  = $em->getRepository("PiAppGedmoBundle:Block")->findOneByEntity($locale, $id, 'object');
+
+        $NoLayout   = $request->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Block")->find($id);
-            $entity->addTranslation(new BlockTranslation($locale));            
+            $entity->addTranslation(new BlockTranslation($locale));
         }
 
-        $editForm   = $this->createForm(new BlockType($em, $locale, $this->container), $entity, array('show_legend' => false));
+        $editForm   = $this->createForm(new BlockType($em, $locale, $this->container), $entity, ['show_legend' => false]);
         $deleteForm = $this->createDeleteForm($id);
 
-        return $this->render("PiAppGedmoBundle:Block:$template", array(
+        return $this->render("PiAppGedmoBundle:Block:$template", [
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-            'NoLayout'       => $NoLayout,
-        ));
+            'NoLayout'    => $NoLayout,
+        ]);
     }
 
     /**
@@ -282,16 +286,17 @@ class BlockController extends abstractController
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>   
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function updateAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $entity = $em->getRepository("PiAppGedmoBundle:Block")->findOneByEntity($locale, $id, "object"); 
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";        
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale    = $request->getLocale();
+        $entity = $em->getRepository("PiAppGedmoBundle:Block")->findOneByEntity($locale, $id, "object");
+
+        $NoLayout   = $request->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Block")->find($id);
@@ -300,7 +305,7 @@ class BlockController extends abstractController
         $editForm   = $this->createForm(new BlockType($em, $locale, $this->container), $entity, array('show_legend' => false));
         $deleteForm = $this->createDeleteForm($id);
 
-        $editForm->bind($this->getRequest(), $entity);
+        $editForm->bind($request, $entity);
         if ($editForm->isValid()) {
             $entity->setTranslatableLocale($locale);
             $em->persist($entity);
@@ -313,7 +318,7 @@ class BlockController extends abstractController
             'entity'      => $entity,
             'edit_form'   => $editForm->createView(),
             'delete_form' => $deleteForm->createView(),
-            'NoLayout'       => $NoLayout,
+            'NoLayout'    => $NoLayout,
         ));
     }
 
@@ -323,17 +328,16 @@ class BlockController extends abstractController
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function deleteAction($id)
     {
         $em      = $this->getDoctrine()->getManager();
-        $locale     = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');        
-    
+        $request = $this->container->get('request_stack')->getCurrentRequest();
+        $locale     = $request->getLocale();
+
+        $NoLayout   = $request->query->get('NoLayout');
         $form      = $this->createDeleteForm($id);
-        $request = $this->getRequest();
 
         $form->bind($request);
 
@@ -348,15 +352,15 @@ class BlockController extends abstractController
                 $em->remove($entity);
                 $em->flush();
             } catch (\Exception $e) {
-                $this->container->get('request')->getSession()->getFlashBag()->clear();
-                $this->container->get('request')->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
+                $request->getSession()->getFlashBag()->clear();
+                $request->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
             }
         }
 
         return $this->redirect($this->generateUrl('admin_gedmo_block', array('NoLayout' => $NoLayout)));
     }
 
-    private function createDeleteForm($id)
+    protected function createDeleteForm($id)
     {
         return $this->createFormBuilder(array('id' => $id))
             ->add('id', 'hidden')
@@ -366,49 +370,50 @@ class BlockController extends abstractController
 
     /**
      * Template : Finds and displays a Block entity.
-     * 
+     *
      * @Cache(maxage="86400")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_showAction($id, $template = '_tmp_show.html.twig', $lang = "")
     {
-        $em     = $this->getDoctrine()->getManager();
-        
-        if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-        
+        $em = $this->getDoctrine()->getManager();
+
+        if (empty($lang)) {
+            $lang = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        }
+
         $entity = $em->getRepository("PiAppGedmoBundle:Block")->findOneByEntity($lang, $id, 'object', false);
-        
+
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Block');
         }
-        
-        return $this->render("PiAppGedmoBundle:Block:$template", array(
-                'entity'   => $entity,
-                'locale'   => $lang,
-                'lang'     => $lang,
-        ));
+
+        return $this->render("PiAppGedmoBundle:Block:$template", [
+            'entity'   => $entity,
+            'locale'   => $lang,
+            'lang'     => $lang,
+        ]);
     }
 
     /**
      * Template : Finds and displays a list of Block entity.
-     * 
+     *
      * @Cache(maxage="86400")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_listAction($category = '', $MaxResults = null, $template = '_tmp_list.html.twig', $order = 'DESC', $lang = "")
     {
         $em         = $this->getDoctrine()->getManager();
 
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-        
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $query        = $em->getRepository("PiAppGedmoBundle:Block")->getAllByCategory($category, $MaxResults, $order)->getQuery();
-        $entities   = $em->getRepository("PiAppGedmoBundle:Block")->findTranslationsByQuery($lang, $query, 'object', false);                   
+        $entities   = $em->getRepository("PiAppGedmoBundle:Block")->findTranslationsByQuery($lang, $query, 'object', false);
 
         return $this->render("PiAppGedmoBundle:Block:$template", array(
             'entities' => $entities,
@@ -416,5 +421,5 @@ class BlockController extends abstractController
             'locale'   => $lang,
             'lang'       => $lang,
         ));
-    }     
+    }
 }

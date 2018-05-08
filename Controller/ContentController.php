@@ -14,7 +14,7 @@ namespace PiApp\GedmoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sfynx\CoreBundle\Controller\abstractController;
-use Sfynx\ToolBundle\Exception\ControllerException;
+use Sfynx\CoreBundle\Layers\Infrastructure\Exception\ControllerException;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,9 +25,9 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use JMS\SecurityExtraBundle\Annotation\PreAuthorize;
 
-use PiApp\GedmoBundle\Entity\Content;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Content;
 use PiApp\GedmoBundle\Form\ContentType;
-use PiApp\GedmoBundle\Entity\Translation\ContentTranslation;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Translation\ContentTranslation;
 
 /**
  * Content controller.
@@ -41,14 +41,14 @@ use PiApp\GedmoBundle\Entity\Translation\ContentTranslation;
 class ContentController extends abstractController
 {
     protected $_entityName = "PiAppGedmoBundle:Content";
-    
+
     /**
      * Enabled content entities.
      *
      * @Route("/admin/gedmo/content/enabled", name="admin_gedmo_content_enabledentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     * 
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
@@ -56,14 +56,14 @@ class ContentController extends abstractController
     {
         return parent::enabledajaxAction();
     }
-    
+
     /**
      * Disable content  entities.
      *
      * @Route("/admin/gedmo/content/disable", name="admin_gedmo_content_disablentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     * 
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
@@ -71,22 +71,22 @@ class ContentController extends abstractController
     {
         return parent::disableajaxAction();
     }
-    
+
     /**
      * Position content entities.
      *
      * @Route("/admin/gedmo/content/position", name="admin_gedmo_content_position_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     * 
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function positionajaxAction()
     {
         return parent::positionajaxAction();
-    }    
-    
+    }
+
     /**
      * Delete Content entities.
      *
@@ -100,8 +100,8 @@ class ContentController extends abstractController
     public function deleteajaxAction()
     {
         return parent::deletajaxAction();
-    }    
-    
+    }
+
     /**
      * Archive a Content entity.
      *
@@ -115,7 +115,7 @@ class ContentController extends abstractController
     public function archiveajaxAction()
     {
         return parent::archiveajaxAction();
-    }    
+    }
 
     /**
      * Lists all Content entities.
@@ -128,43 +128,43 @@ class ContentController extends abstractController
     public function indexAction()
     {
         $em         = $this->getDoctrine()->getManager();
-        $locale        = $this->container->get('request')->getLocale();
-    
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $locale        = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
         if (!$NoLayout)     $template = "index.html.twig"; else $template = "index_ajax.html.twig";
-    
+
         if ($NoLayout){
             //$entities     = $em->getRepository("PiAppGedmoBundle:Content")->getAllEnableByCatAndByPosition($locale, $category, 'object');
             $query        = $em->getRepository("PiAppGedmoBundle:Content")->getAllByCategory($category, null, '', 'ASC', false)->getQuery();
             $entities   = $em->getRepository("PiAppGedmoBundle:Content")->findTranslationsByQuery($locale, $query, 'object', false);
         }else
             $entities    = $em->getRepository("PiAppGedmoBundle:Content")->findAllByEntity($locale, 'object');
-    
+
         return $this->render("PiAppGedmoBundle:Content:$template", array(
                 'entities' => $entities,
                 'NoLayout'    => $NoLayout,
                 'category'  => $category,
         ));
     }
-    
+
     /**
      * Finds and displays a Content entity.
      *
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @Template()
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function showAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Content")->findOneByEntity($locale, $id, 'object');
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show_ajax.html.twig";        
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show_ajax.html.twig";
 
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Content');
@@ -186,18 +186,18 @@ class ContentController extends abstractController
      * @Secure(roles="ROLE_EDITOR")
      * @Template()
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function newAction()
     {
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $em     = $this->getDoctrine()->getManager();
         $entity = new Content();
         $form   = $this->createForm(new ContentType($em, $locale, $this->container), $entity, array('show_legend' => false));
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new_ajax.html.twig";        
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new_ajax.html.twig";
 
         return $this->render("PiAppGedmoBundle:Content:$template", array(
             'entity' => $entity,
@@ -213,17 +213,17 @@ class ContentController extends abstractController
      * @Secure(roles="ROLE_EDITOR")
      * @Template()
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function createAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new_ajax.html.twig";        
-    
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new_ajax.html.twig";
+
         $entity  = new Content();
         $request = $this->getRequest();
         $form    = $this->createForm(new ContentType($em, $locale, $this->container), $entity, array('show_legend' => false));
@@ -235,7 +235,7 @@ class ContentController extends abstractController
             $em->flush();
 
             return $this->redirect($this->generateUrl('admin_gedmo_content_show', array('id' => $entity->getId(), 'NoLayout' => $NoLayout, 'category' => $category)));
-                        
+
         }
 
         return $this->render("PiAppGedmoBundle:Content:$template", array(
@@ -252,21 +252,21 @@ class ContentController extends abstractController
      * @Secure(roles="ROLE_EDITOR")
      * @Template()
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function editAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Content")->findOneByEntity($locale, $id, 'object');
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit_ajax.html.twig";        
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit_ajax.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Content")->find($id);
-            $entity->addTranslation(new ContentTranslation($locale));            
+            $entity->addTranslation(new ContentTranslation($locale));
         }
 
         $editForm   = $this->createForm(new ContentType($em, $locale, $this->container), $entity, array('show_legend' => false));
@@ -287,17 +287,17 @@ class ContentController extends abstractController
      * @Secure(roles="ROLE_EDITOR")
      * @Template()
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>   
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function updateAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $entity = $em->getRepository("PiAppGedmoBundle:Content")->findOneByEntity($locale, $id, "object"); 
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit_ajax.html.twig";        
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $entity = $em->getRepository("PiAppGedmoBundle:Content")->findOneByEntity($locale, $id, "object");
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit_ajax.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Content")->find($id);
@@ -329,16 +329,16 @@ class ContentController extends abstractController
      *
      * @Secure(roles="ROLE_SUPER_ADMIN")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function deleteAction($id)
     {
         $em      = $this->getDoctrine()->getManager();
-        $locale     = $this->container->get('request')->getLocale();
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');        
-    
+        $locale     = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         $form      = $this->createDeleteForm($id);
         $request = $this->getRequest();
 
@@ -355,67 +355,67 @@ class ContentController extends abstractController
                 $em->remove($entity);
                 $em->flush();
             } catch (\Exception $e) {
-                $this->container->get('request')->getSession()->getFlashBag()->clear();
-                $this->container->get('request')->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->clear();
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
             }
         }
 
         return $this->redirect($this->generateUrl('admin_gedmo_content', array('NoLayout' => $NoLayout, 'category' => $category)));
     }
 
-    private function createDeleteForm($id)
+    protected function createDeleteForm($id)
     {
         return $this->createFormBuilder(array('id' => $id))
             ->add('id', 'hidden')
             ->getForm()
         ;
-    }    
+    }
     /**
      * Template : Finds and displays a Content entity.
-     * 
+     *
      * @Template()
      * @Cache(maxage="86400")
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_showAction($id, $template = '_tmp_show.html.twig', $lang = "")
     {
         $em     = $this->getDoctrine()->getManager();
-        
+
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-        
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $entity = $em->getRepository("PiAppGedmoBundle:Content")->findOneByEntity($lang, $id, 'object', false);
-        
+
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Content');
         }
-    
+
         return $this->render("PiAppGedmoBundle:Content:$template", array(
                 'entity'      => $entity,
                 'locale'   => $lang,
                 'lang'       => $lang,
         ));
-    }    
+    }
     /**
      * Template : Finds and displays a list of Content entity.
-     * 
+     *
      * @Template()
      * @Cache(maxage="86400")
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_listAction($category = '', $MaxResults = null, $template = '_tmp_list.html.twig', $order = 'DESC', $lang = "")
     {
         $em         = $this->getDoctrine()->getManager();
 
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-        
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $query        = $em->getRepository("PiAppGedmoBundle:Content")->getAllByCategory($category, $MaxResults, $order)->getQuery();
-        $entities   = $em->getRepository("PiAppGedmoBundle:Content")->findTranslationsByQuery($lang, $query, 'object', false);                   
+        $entities   = $em->getRepository("PiAppGedmoBundle:Content")->findTranslationsByQuery($lang, $query, 'object', false);
 
         return $this->render("PiAppGedmoBundle:Content:$template", array(
             'entities' => $entities,
@@ -423,5 +423,5 @@ class ContentController extends abstractController
             'locale'   => $lang,
             'lang'       => $lang,
         ));
-    } 
+    }
 }

@@ -14,7 +14,8 @@ namespace PiApp\GedmoBundle\Manager\FormBuilder;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
-use Sfynx\CmfBundle\Manager\PiFormBuilderManager;
+use Sfynx\CmfBundle\Layers\Domain\Service\Manager\PiFormBuilderManager;
+use Sfynx\CmfBundle\Layers\Domain\Service\Util\PiWidget\Gedmo\NavigationHandler;
 use PiApp\GedmoBundle\Manager\FormBuilder\PiModelWidgetSlideCollectionType;
 use PiApp\GedmoBundle\Manager\FormBuilder\PiModelWidgetSearchFieldsType;
         
@@ -68,10 +69,10 @@ class PiModelWidgetMenu extends PiFormBuilderManager
      */
     public static function getContents()
     {
-        return array(
-                PiFormBuilderManager::CONTENT_RENDER_TITLE  => "Widget Menu",
-                PiFormBuilderManager::CONTENT_RENDER_DESC   => "call for inserting a menu",
-        );
+        return [
+            PiFormBuilderManager::CONTENT_RENDER_TITLE  => "Widget Menu",
+            PiFormBuilderManager::CONTENT_RENDER_DESC   => "call for inserting a menu",
+        ];
     }    
 
     /**
@@ -88,20 +89,26 @@ class PiModelWidgetMenu extends PiFormBuilderManager
         // we get all entities
         //$listTableClasses = $this->container->get('sfynx.database.db')->listTables('table_class');
         //$listTableClasses = array_combine($listTableClasses, $listTableClasses);
-        $ListsAvailableEntities = \Sfynx\CmfBundle\Util\PiWidget\PiGedmoManager::getAvailableNavigation();
+        $ListsAvailableEntities = NavigationHandler::getAvailable();
         $ListsAvailableEntities = array_combine(array_keys($ListsAvailableEntities), array_keys($ListsAvailableEntities));
         // we get all slide templates
-        $listFiles = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle("/Resources/views/Template/Tree");
-        $listFiles = array_map(function($value) {
-        	return basename($value);
+        $listFiles = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle('/Resources/views/Template/Tree', 'twig', 'templating');
+        $listFiles_ = array_map(function($value) {
+            $arr = explode(':', $value);
+        	return end($arr);
         }, array_values($listFiles));
-        $listFiles = array_combine($listFiles, $listFiles);
-        //
-        $css = array();
+        $listFiles = array_combine($listFiles, $listFiles_);
+        // we get all css files
+        $listCss = $this->container->get('sfynx.tool.file_manager')->ListFilesBundle('/Resources/public/css/widget/tree', 'css', 'assetic');
+        $listCss_ = array_map(function($value) {
+            return basename($value);
+        }, array_values($listCss));
+        $listCss = array_combine($listCss, $listCss_);
         // actions
-        $actions = array(
-                '_navigation_default' => 'Navigation par défault',
-        );
+        $actions = [
+            '_navigation_default' => 'Navigation par défault',
+        ];
+
         // we create the forme
         $builder
         ->add('action', 'choice', array(
@@ -120,7 +127,7 @@ class PiModelWidgetMenu extends PiFormBuilderManager
         ->add('template', 'choice', array(
         		'choices'   => $listFiles,
         		'multiple'    => false,
-        		'required'  => true,
+        		'required'  => false,
                 'expanded' => false,
         		'label' => 'pi.form.label.select.choose.template',
         		"attr" => array(
@@ -128,7 +135,7 @@ class PiModelWidgetMenu extends PiFormBuilderManager
         		),
         ))   
         ->add('css', 'choice', array(
-        		'choices'   => $css,
+        		'choices'   => $listCss,
         		'multiple'    => true,
         		'required'  => false,
         		'expanded' => false,
@@ -193,7 +200,7 @@ class PiModelWidgetMenu extends PiFormBuilderManager
         		'prototype'    => true,
         		// Post update
         		'by_reference' => true,
-        		'type'   => new PiModelWidgetSearchFieldsType($this->_locale, $this->_container),
+        		'type'   => new PiModelWidgetSearchFieldsType($this->_locale, $this->container),
         		'options'  => array(
         				'attr'      => array('class' => 'collection_widget')
         		),
@@ -218,7 +225,7 @@ class PiModelWidgetMenu extends PiFormBuilderManager
         ?>
                 jQuery(document).ready(function() {
                     var indexSQLParams    = 0;
-                    jQuery("div#piappgedmobundlemanagerformbuilderpimodelwidgetnavigation").find("fieldset").append('<br ><ul id="sqlparams-fields-list-navigation" ></ul>');
+                    jQuery("div#piappgedmobundlemanagerformbuilderpimodelwidgetmenu").find("fieldset").append('<br ><ul id="sqlparams-fields-list-navigation" ></ul>');
                     jQuery('#add-another-sqlparameters-navigation').click(function() {
                         var prototypeList = jQuery('#prototype_script_navigationsearchfields');   
                         // parcourt le template prototype
@@ -235,7 +242,7 @@ class PiModelWidgetMenu extends PiFormBuilderManager
                         return false;
                     });
                 })            
-        <?php 
+        <?php
         // We retrieve the contents of the buffer.
         $_content_js = ob_get_contents ();
         // We clean the buffer.
@@ -247,7 +254,7 @@ class PiModelWidgetMenu extends PiFormBuilderManager
         ob_start ();
         ?>
             <br/>
-            &nbsp;&nbsp;&nbsp;<a href="#" id="add-another-sqlparameters-navigation">Add another field SQL</a>
+            <a href="#" id="add-another-sqlparameters-navigation">Add another field SQL</a>
         <?php
         // We retrieve the contents of the buffer.
         $_content_html = ob_get_contents ();
@@ -304,43 +311,33 @@ class PiModelWidgetMenu extends PiFormBuilderManager
      */
     public function XmlConfigWidget(array $data)
     {
-        $AllCss = array();
+        $AllCss = [];
         foreach ($data['css'] as $css) {
             $AllCss[] = $css;
         }
-        $routeActifMenu = array();
-        $lvlActifMenu = array();
-        
-        return
-        array(
-                'plugin'    => 'gedmo',
-                'action'    => 'navigation',
-                'xml'         => Array (
-                        "widgets"     => Array (
-                                'css' => $AllCss,
-                                "gedmo"        => Array (
-                                        "controller"        => $data['table'].':'.$data['action'],
-                                        "params"    => array(
-                                            'template' => $data['template'],
-                                            'enabledonly' => $data['enabled'],
-                                            'category' => $data['category'],
-                                            'node' => $data['node'],
-                                            'navigation' => array(
-                                                'query_function'  => $data['query_function'],
-                                                'searchFields' => $data['navigationsearchfields'],
-                                                'liActiveClass'  => $data['liActiveClass'],
-                                                'liInactiveClass'  => $data['liInactiveClass'],
-                                                'aActiveClass'  => $data['aActiveClass'],
-                                                'aInactiveClass'  => $data['aInactiveClass'],
-                                                'enabledonly'  => $data['enabledonly'],                                                                                                        
-                                                'routeActifMenu' => $routeActifMenu,
-                                                'lvlActifMenu' => $lvlActifMenu,
-                                            )
-                                        )
-                                )
+
+        return [
+            'plugin' => 'gedmo',
+            'action' => 'navigation',
+            'xml'    => Array (
+                "widgets" => Array (
+                    'css' => $AllCss,
+                    "gedmo" => Array (
+                        "controller" => $data['table'].':'.$data['action'],
+                        "params" => array(
+                            'template' => $data['template'],
+                            'enabledonly' => $data['enabled'],
+                            'category' => $data['category'],
+                            'node' => $data['node'],
+                            'navigation' => array(
+                                'query_function' => $data['query_function'],
+                                'searchFields' => $data['navigationsearchfields'],
+                            )
                         )
-                ),
-        );
+                    )
+                )
+            ),
+        ];
     }        
 
 }

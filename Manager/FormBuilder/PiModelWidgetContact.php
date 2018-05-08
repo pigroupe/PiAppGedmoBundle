@@ -14,7 +14,7 @@ namespace PiApp\GedmoBundle\Manager\FormBuilder;
 
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\Form\FormBuilderInterface;
-use Sfynx\CmfBundle\Manager\PiFormBuilderManager;
+use Sfynx\CmfBundle\Layers\Domain\Service\Manager\PiFormBuilderManager;
         
 /**
 * Description of the Form builder manager
@@ -81,10 +81,10 @@ class PiModelWidgetContact extends PiFormBuilderManager
      */    
     public function buildForm(FormBuilderInterface $builder, array $options)
     {   
-        $query        = $this->_em->getRepository("PiAppGedmoBundle:Contact")->getAllByCategory('', null, "DESC", '', true)->getQuery();
+        $query      = $this->_em->getRepository("PiAppGedmoBundle:Contact")->getAllByCategory('', null, "DESC", '', true)->getQuery();
         $choiceList = $this->_em->getRepository("PiAppGedmoBundle:Contact")->findTranslationsByQuery($this->_locale, $query, 'object', false);
         
-        $result = array();
+        $result = [];
         if (is_array($choiceList)) {
             foreach ($choiceList as $key => $field) {
                 $title = $field->getTitle();

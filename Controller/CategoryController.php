@@ -14,7 +14,7 @@ namespace PiApp\GedmoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sfynx\CoreBundle\Controller\abstractController;
-use Sfynx\ToolBundle\Exception\ControllerException;
+use Sfynx\CoreBundle\Layers\Infrastructure\Exception\ControllerException;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,11 +25,11 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use JMS\SecurityExtraBundle\Annotation\PreAuthorize;
 
-use Sfynx\MediaBundle\Entity\Media;
-use Sfynx\MediaBundle\Entity\Mediatheque;
-use PiApp\GedmoBundle\Entity\Category;
+use Sfynx\MediaBundle\Layers\Domain\Entity\Media;
+use Sfynx\MediaBundle\Layers\Domain\Entity\Mediatheque;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Category;
 use PiApp\GedmoBundle\Form\CategoryType;
-use PiApp\GedmoBundle\Entity\Translation\CategoryTranslation;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Translation\CategoryTranslation;
 
 /**
  * Category controller.
@@ -50,7 +50,7 @@ class CategoryController extends abstractController
      * @Route("/admin/gedmo/category/enabled", name="admin_gedmo_category_enabledentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
@@ -61,18 +61,18 @@ class CategoryController extends abstractController
 
     /**
      * Disable Category entities.
-     * 
+     *
      * @Route("/admin/gedmo/category/disable", name="admin_gedmo_category_disablentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function disableajaxAction()
     {
         return parent::disableajaxAction();
-    } 
+    }
 
     /**
      * Position Category entities.
@@ -80,15 +80,15 @@ class CategoryController extends abstractController
      * @Route("/admin/gedmo/category/position", name="admin_gedmo_category_position_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     *     
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function positionajaxAction()
     {
         return parent::positionajaxAction();
-    } 
-    
+    }
+
     /**
      * Delete Category entities.
      *
@@ -102,8 +102,8 @@ class CategoryController extends abstractController
     public function deleteajaxAction()
     {
         return parent::deletajaxAction();
-    }    
-    
+    }
+
     /**
      * Archive a Category entity.
      *
@@ -117,8 +117,8 @@ class CategoryController extends abstractController
     public function archiveajaxAction()
     {
         return parent::archiveajaxAction();
-    }    
-    
+    }
+
     /**
      * get entities in ajax request for select form.
      *
@@ -130,17 +130,17 @@ class CategoryController extends abstractController
      */
     public function selectajaxAction($type)
     {
-    	$request = $this->container->get('request');
+    	$request = $this->container->get('request_stack')->getCurrentRequest();
     	$em      = $this->getDoctrine()->getManager();
-    	$locale  = $this->container->get('request')->getLocale();
+    	$locale  = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
     	//
-    	$pagination = $this->container->get('request')->get('pagination', null);
-    	$keyword    = $this->container->get('request')->get('keyword', '');
-    	$MaxResults = $this->container->get('request')->get('max', 10);
+    	$pagination = $this->container->get('request_stack')->getCurrentRequest()->get('pagination', null);
+    	$keyword    = $this->container->get('request_stack')->getCurrentRequest()->get('keyword', '');
+    	$MaxResults = $this->container->get('request_stack')->getCurrentRequest()->get('max', 10);
     	// we set query
         $query  = $em->getRepository("PiAppGedmoBundle:Category")->getAllByCategory('', null, '', 'ASC', false);
         $query
-        ->andWhere("a.type = '{$type}'");    		
+        ->andWhere("a.type = '{$type}'");
         //
         $keyword = array(
             0 => array(
@@ -150,13 +150,13 @@ class CategoryController extends abstractController
                 'field_trans_name' => 'trans',
             ),
         );
-        
+
         return $this->selectajaxQuery($pagination, $MaxResults, $keyword, $query, $locale, true, array(
-            'time'      => 3600,  
+            'time'      => 3600,
             'namespace' => 'hash_list_gedmo_category'
         ));
-    }     
-    
+    }
+
     /**
      * Select all entities.
      *
@@ -177,13 +177,13 @@ class CategoryController extends abstractController
             if (!empty($content)) {
                 $tab[] = array(
                     'id' => $obj->getId(),
-                    'text' =>$this->container->get('twig')->render($content, array())
+                    'text' => $content
                 );
             }
     	}
-    	
+
     	return $tab;
-    }     
+    }
 
     /**
      * Lists all Category entities.
@@ -196,30 +196,31 @@ class CategoryController extends abstractController
     public function indexAction()
     {
         $em         = $this->getDoctrine()->getManager();
-        $locale        = $this->container->get('request')->getLocale();
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $locale        = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
         if (!$NoLayout)     $template = "index.html.twig"; else $template = "index.html.twig";
-        
+
         if ($NoLayout){
         	$query    = $em->getRepository("PiAppGedmoBundle:Category")->setContainer($this->container)->getAllByCategory('', null, '', 'DESC', false);
         } else {
         	$query    = $em->getRepository("PiAppGedmoBundle:Category")->getAllByCategory('', null, '', 'ASC', false);
         }
-        $qb     = $em->getRepository($this->_entityName)->cacheQuery(
-                $query->getQuery(), 
-                3600, 
-                3, 
-                true,
-                'hash_list_gedmo_category'
-        );
-        $entities   = $em->getRepository("PiAppGedmoBundle:Category")->findTranslationsByQuery($locale, $qb, 'object', false, true);
-    
+//        $qb     = $em->getRepository($this->_entityName)->cacheQuery(
+//                $query->getQuery(),
+//                3600,
+//                3,
+//                true,
+//                'hash_list_gedmo_category'
+//        );
+
+        $entities   = $em->getRepository("PiAppGedmoBundle:Category")->findTranslationsByQuery($locale, $query->getQuery(), 'object', false, true);
+
         return $this->render("PiAppGedmoBundle:Category:$template", array(
                 'entities' => $entities,
                 'NoLayout'    => $NoLayout,
         ));
-    }    
-    
+    }
+
     /**
      * Finds and displays a Category entity.
      *
@@ -227,16 +228,16 @@ class CategoryController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function showAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($locale, $id, 'object');
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show.html.twig";        
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)     $template = "show.html.twig"; else $template = "show.html.twig";
 
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Category');
@@ -259,19 +260,19 @@ class CategoryController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function newAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $type   = $this->container->get('request')->query->get('type');
+        $type   = $this->container->get('request_stack')->getCurrentRequest()->query->get('type');
         $entity = new Category();
         $entity->setType($type);
         $entity->setUpdatedAt(new \Datetime());
         $form   = $this->createForm(new CategoryType($this->container, $em), $entity, array('show_legend' => false));
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";        
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";
 
         return $this->render("PiAppGedmoBundle:Category:$template", array(
             'entity' => $entity,
@@ -287,16 +288,16 @@ class CategoryController extends abstractController
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function createAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";        
-    
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "new.html.twig";  else     $template = "new.html.twig";
+
         $entity  = new Category();
         $request = $this->getRequest();
         $form    = $this->createForm(new CategoryType($this->container, $em), $entity, array('show_legend' => false));
@@ -308,9 +309,9 @@ class CategoryController extends abstractController
             $em->flush();
             // to delete cache list query
             $this->deleteAllCacheQuery('hash_list_gedmo_category');
-            
+
             return $this->redirect($this->generateUrl('admin_gedmo_category_show', array('id' => $entity->getId(), 'NoLayout' => $NoLayout)));
-                        
+
         }
 
         return $this->render("PiAppGedmoBundle:Category:$template", array(
@@ -326,20 +327,20 @@ class CategoryController extends abstractController
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function editAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = $em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($locale, $id, 'object');
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";        
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Category")->find($id);
-            $entity->addTranslation(new CategoryTranslation($locale));            
+            $entity->addTranslation(new CategoryTranslation($locale));
         }
 
         $editForm   = $this->createForm(new CategoryType($this->container, $em), $entity, array('show_legend' => false));
@@ -359,16 +360,16 @@ class CategoryController extends abstractController
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
      * @access public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>   
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function updateAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $entity = $em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($locale, $id, "object"); 
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";        
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $entity = $em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($locale, $id, "object");
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+        if (!$NoLayout)    $template = "edit.html.twig";  else    $template = "edit.html.twig";
 
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Category")->find($id);
@@ -401,17 +402,17 @@ class CategoryController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\RedirectResponse
-     *     
+     *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function deleteAction($id)
     {
         $em      = $this->getDoctrine()->getManager();
-        $locale     = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');        
-    
+        $locale     = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         $form      = $this->createDeleteForm($id);
         $request = $this->getRequest();
 
@@ -430,15 +431,15 @@ class CategoryController extends abstractController
                 // to delete cache list query
                 $this->deleteAllCacheQuery('hash_list_gedmo_category');
             } catch (\Exception $e) {
-                $this->container->get('request')->getSession()->getFlashBag()->clear();
-                $this->container->get('request')->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->clear();
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
             }
         }
 
         return $this->redirect($this->generateUrl('admin_gedmo_category', array('NoLayout' => $NoLayout)));
     }
 
-    private function createDeleteForm($id)
+    protected function createDeleteForm($id)
     {
         return $this->createFormBuilder(array('id' => $id))
             ->add('id', 'hidden')
@@ -448,26 +449,26 @@ class CategoryController extends abstractController
 
     /**
      * Template : Finds and displays a Category entity.
-     * 
+     *
      * @Cache(maxage="86400")
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_showAction($id, $template = '_tmp_show.html.twig', $lang = "")
     {
         $em     = $this->getDoctrine()->getManager();
-        
+
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-        
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $entity = $em->getRepository("PiAppGedmoBundle:Category")->findOneByEntity($lang, $id, 'object', false);
-        
+
         if (!$entity) {
             throw ControllerException::NotFoundEntity('Category');
         }
-    
+
         return $this->render("PiAppGedmoBundle:Category:$template", array(
                 'entity'      => $entity,
                 'locale'   => $lang,
@@ -477,22 +478,22 @@ class CategoryController extends abstractController
 
     /**
      * Template : Finds and displays a list of Category entity.
-     * 
+     *
      * @Cache(maxage="86400")
      * @return \Symfony\Component\HttpFoundation\Response
      *
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com> 
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function _template_listAction($category = '', $MaxResults = null, $template = '_tmp_list.html.twig', $order = 'DESC', $lang = "")
     {
         $em         = $this->getDoctrine()->getManager();
 
         if (empty($lang))
-            $lang    = $this->container->get('request')->getLocale();
-        
+            $lang    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
         $query        = $em->getRepository("PiAppGedmoBundle:Category")->getAllByCategory($category, $MaxResults, $order)->getQuery();
-        $entities   = $em->getRepository("PiAppGedmoBundle:Category")->findTranslationsByQuery($lang, $query, 'object', false);                   
+        $entities   = $em->getRepository("PiAppGedmoBundle:Category")->findTranslationsByQuery($lang, $query, 'object', false);
 
         return $this->render("PiAppGedmoBundle:Category:$template", array(
             'entities' => $entities,
@@ -500,6 +501,6 @@ class CategoryController extends abstractController
             'locale'   => $lang,
             'lang'       => $lang,
         ));
-    }     
-    
+    }
+
 }

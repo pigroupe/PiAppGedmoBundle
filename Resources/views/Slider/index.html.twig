@@ -1,6 +1,6 @@
 {% initJquery 'GRID:grid-table' %}
 {% if app.request.query.get('NoLayout') %}
-	{% set layout_nav = getParameter('sfynx.auth.theme.layout.ajax') %}
+	{% set layout_nav = getParameter('sfynx.template.theme.layout.ajax') %}
 {% else %}
 	{% set layout_nav = app.request.attributes.get('sfynx-layout') %}
 {% endif %}	
@@ -21,7 +21,7 @@
 	</div>
 	<!-- end actions-box........... -->
 	
-	{% include getParameter('sfynx.auth.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-header.html.twig" %}
+	{% include getParameter('sfynx.template.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-header.html.twig" %}
 	<table id="grid_slider" class="grid" >
 	    <thead>
 	        <tr>	  
@@ -54,7 +54,7 @@
 	            </td>
 	            <td>{{ entity.subtitle}}</td>	            
 	            <td>{% if entity.publishedat %}{{ entity.publishedat|date('Y-m-d') }}{% endif%}</td>
-	        	<td  class="position" >{{ entity.position }}</td>	
+	        	<td class="position" >{{ entity.position }}</td>
 	            <td class="enabled" width="20px">{{ entity.enabled }}</td>	
 				<td width="130px">
 					<a href="{{ path('admin_gedmo_slider_show', { 'id': entity.id, 'NoLayout':NoLayout, 'category':category }) }}" title="{{ 'pi.grid.action.show'|trans }}" data-ui-icon="ui-icon-show" class="button-ui-icon-show info-tooltip">{{ 'pi.grid.action.show'|trans }}</a>
@@ -70,7 +70,7 @@
 	    {% endfor %}
 	    </tbody>
 	</table>
-	{% include getParameter('sfynx.auth.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-footer.html.twig" %}
+	{% include getParameter('sfynx.template.theme.layout.admin.pc')|replace({'::': ':'})~"Crud:index-footer.html.twig" %}
 	
 {% endblock %}
 

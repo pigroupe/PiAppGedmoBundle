@@ -14,7 +14,7 @@ namespace PiApp\GedmoBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
 use Sfynx\CoreBundle\Controller\abstractController;
-use Sfynx\ToolBundle\Exception\ControllerException;
+use Sfynx\CoreBundle\Layers\Infrastructure\Exception\ControllerException;
 
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Response;
@@ -25,10 +25,10 @@ use Sensio\Bundle\FrameworkExtraBundle\Configuration\Cache;
 use JMS\SecurityExtraBundle\Annotation\Secure;
 use JMS\SecurityExtraBundle\Annotation\PreAuthorize;
 
-use PiApp\GedmoBundle\Entity\Menu;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Menu;
 use PiApp\GedmoBundle\Form\MenuType;
 use PiApp\GedmoBundle\Form\CategorySearchForm;
-use PiApp\GedmoBundle\Entity\Translation\MenuTranslation;
+use PiApp\GedmoBundle\Layers\Domain\Entity\Translation\MenuTranslation;
 
 /**
  * Menu controller.
@@ -49,7 +49,7 @@ class MenuController extends abstractController
      * @Route("/admin/gedmo/menu/enabled", name="admin_gedmo_menu_enabledentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     * 
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
@@ -57,14 +57,14 @@ class MenuController extends abstractController
     {
         return parent::enabledajaxAction();
     }
-    
+
     /**
      * Disable Menu  entities.
      *
      * @Route("/admin/gedmo/menu/disable", name="admin_gedmo_menu_disablentity_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     * 
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
@@ -72,22 +72,22 @@ class MenuController extends abstractController
     {
         return parent::disableajaxAction();
     }
-    
+
     /**
      * Position Menu entities.
      *
      * @Route("/admin/gedmo/menu/position", name="admin_gedmo_menu_position_ajax")
      * @Secure(roles="ROLE_EDITOR")
      * @return \Symfony\Component\HttpFoundation\Response
-     * 
+     *
      * @access  public
      * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function positionajaxAction()
     {
         return parent::positionajaxAction();
-    }    
-    
+    }
+
     /**
      * Delete Menu entities.
      *
@@ -101,8 +101,8 @@ class MenuController extends abstractController
     public function deleteajaxAction()
     {
         return parent::deletajaxAction();
-    }    
-    
+    }
+
     /**
      * Archive a Menu entity.
      *
@@ -128,29 +128,29 @@ class MenuController extends abstractController
     public function indexAction()
     {
         $em         = $this->getDoctrine()->getManager();
-        $locale     = $this->container->get('request')->getLocale();
+        $locale     = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entities   = $em->getRepository("PiAppGedmoBundle:Menu")->getAllTree($locale);
         //
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-         
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         return $this->render("PiAppGedmoBundle:Menu:index.html.twig", array(
                 'entities'    => $entities,
                 'NoLayout'      => $NoLayout,
         ));
     }
-    
+
     /**
      * Finds and displays a Menu entity.
      *
      * @PreAuthorize("hasRole('ROLE_EDITOR') or (hasRole('ROLE_ADMIN') and hasRole('ROLE_SUPER_ADMIN'))")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function showAction($id)
     {
         $em       = $this->getDoctrine()->getManager();
-        $locale   = $this->container->get('request')->getLocale();
-        $NoLayout = $this->container->get('request')->query->get('NoLayout');
+        $locale   = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $NoLayout = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
 
         $entity = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale);
         if (!$entity) {
@@ -171,27 +171,27 @@ class MenuController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function newAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale = $this->container->get('request')->getLocale();
+        $locale = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $entity = new Menu();
         //
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
         if ($category)
             $entity->setCategory($em->getRepository("PiAppGedmoBundle:Category")->find($category));
         //
-        $parent_id   = $this->container->get('request')->query->get('parent');
+        $parent_id   = $this->container->get('request_stack')->getCurrentRequest()->query->get('parent');
         if ($parent_id){
             $parent = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($parent_id, $locale);
             $entity->setParent($parent);
         }
         //
-        $form   = $this->createForm(new MenuType($this->container, $em), $entity, array('show_legend' => false)); 
-               
+        $form   = $this->createForm(new MenuType($this->container, $em), $entity, array('show_legend' => false));
+
         return $this->render("PiAppGedmoBundle:Menu:new.html.twig", array(
             'entity'     => $entity,
             'form'       => $form->createView(),
@@ -204,16 +204,16 @@ class MenuController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function createAction()
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        
-        $category   = $this->container->get('request')->query->get('category');
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-    
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $category   = $this->container->get('request_stack')->getCurrentRequest()->query->get('category');
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         $entity  = new Menu();
         $request = $this->getRequest();
         $form    = $this->createForm(new MenuType($this->container, $em), $entity, array('show_legend' => false));
@@ -239,18 +239,18 @@ class MenuController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function editAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
         //
         $entity = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale, 'object');
         if (!$entity) {
             $entity = $em->getRepository("PiAppGedmoBundle:Menu")->find($id);
-            $entity->addTranslation(new MenuTranslation($locale));            
+            $entity->addTranslation(new MenuTranslation($locale));
         }
         //
         $editForm   = $this->createForm(new MenuType($this->container, $em), $entity, array('show_legend' => false));
@@ -269,13 +269,13 @@ class MenuController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>   
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function updateAction($id)
     {
         $em     = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
+        $locale    = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
         //
         $entity = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale, "object");
         if (!$entity) {
@@ -306,15 +306,15 @@ class MenuController extends abstractController
      *
      * @Secure(roles="ROLE_EDITOR")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>     
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function deleteAction($id)
     {
         $em      = $this->getDoctrine()->getManager();
-        $locale     = $this->container->get('request')->getLocale();
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-    
+        $locale     = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+
+        $NoLayout   = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         $form      = $this->createDeleteForm($id);
         $request = $this->getRequest();
 
@@ -331,164 +331,170 @@ class MenuController extends abstractController
                 $em->remove($entity);
                 $em->flush();
             } catch (\Exception $e) {
-                $this->container->get('request')->getSession()->getFlashBag()->clear();
-                $this->container->get('request')->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->clear();
+                $this->container->get('request_stack')->getCurrentRequest()->getSession()->getFlashBag()->add('notice', 'pi.session.flash.wrong.undelete');
             }
         }
 
         return $this->redirect($this->generateUrl('admin_gedmo_menu', array('NoLayout' => $NoLayout)));
     }
 
-    private function createDeleteForm($id)
+    protected function createDeleteForm($id)
     {
         return $this->createFormBuilder(array('id' => $id))
             ->add('id', 'hidden')
             ->getForm()
         ;
-    }    
-    
+    }
+
     /**
      * @Secure(roles="ROLE_EDITOR")
      * @access    public
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function knpAction()
     {
         $em            = $this->getDoctrine()->getManager();
         $query         = $em->getRepository("PiAppGedmoBundle:Menu")->findAllByEntity($locale, 'object');
-    
+
         $paginator    = $this->get('knp_paginator');
         $categories = $paginator->paginate(
-                $query,
-                $this->get('request')->query->get('page', 1),
-                10
+            $query,
+            $this->get('request_stack')->getCurrentRequest()->query->get('page', 1),
+            10
         );
-        return $this->render('PiAppGedmoBundle:Menu:knp.html.twig', array(
-                'categories'     => $categories,
-        ));    
+        return $this->render('PiAppGedmoBundle:Menu:knp.html.twig', [
+            'categories'     => $categories,
+        ]);
     }
-    
+
     /**
      * Create a tree of the tree
-     * 
+     *
      * @Secure(roles="ROLE_EDITOR")
      * @param string $category
      * @access    public
-     * 
-     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>    
+     *
+     * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function treeAction($category)
     {
         $em        = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
-        $NoLayout  = $this->container->get('request')->query->get('NoLayout');
+        $request   = $this->container->get('request_stack')->getCurrentRequest();
+        $locale    = $request->getLocale();
+        $NoLayout  = $request->query->get('NoLayout');
         if (!$NoLayout)     $template = "tree.html.twig"; else $template = "tree_ajax.html.twig";
 
         // from search category management
         $form_search      = $this->createForm(new CategorySearchForm($em, "menu", $this->container));
-        $data             = array();
-        $data['category'] = $em->getRepository("PiAppGedmoBundle:Category")->find($category);        
+        $data             = [];
+        $data['category'] = $em->getRepository("PiAppGedmoBundle:Category")->find($category);
         $form_search->setData($data);
-        if ($this->getRequest()->getMethod() == 'POST') {
-            $form_search->bind($this->getRequest());
-            $data         = $form_search->getData();
-            $category    = $data['category'];
-            
-            if ($category instanceof \PiApp\GedmoBundle\Entity\Category)           
-                return $this->redirect($this->generateUrl('admin_gedmo_menu_tree', array('NoLayout' => $NoLayout, 'category' => $category->getId())));
-            else
-                return $this->redirect($this->generateUrl('admin_gedmo_menu_tree', array('NoLayout' => $NoLayout, 'category' => '')));
+        if ($request->getMethod() == 'POST') {
+            $form_search->bind($request);
+            $data     = $form_search->getData();
+            $category = $data['category'];
+
+            if ($category instanceof \PiApp\GedmoBundle\Layers\Domain\Entity\Category) {
+                return $this->redirect(
+                    $this->generateUrl('admin_gedmo_menu_tree', ['NoLayout' => $NoLayout, 'category' => $category->getId()])
+                );
+            }
+            return $this->redirect(
+                $this->generateUrl('admin_gedmo_menu_tree', ['NoLayout' => $NoLayout, 'category' => ''])
+            );
         }
-        
+
         // tree management
         $self = &$this;
+        $self->em = $em;
         $self->category = $category;
         $self->NoLayout = $NoLayout;
         $self->translator = $this->container->get('translator');
-        $options = array(
-                'decorate' => true,
-                'rootOpen' => "\n <div class='inner'><ul> \n",
-                'rootClose' => "\n </ul></div> \n",
-                'childOpen' => "    <li> \n",        // 'childOpen' => "    <li class='collapsed' > \n",
-                'childClose' => "    </li> \n",
-                'nodeDecorator' => function($node) use (&$self) {
-                    
-                    $tree   = $self->container->get('doctrine')->getManager()->getRepository($self->_entityName)->findOneById($node['id']);
-                
-                    // define of all url images
-                    $Urlpath0     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/plus.png');
-                    $UrlpathAdd   = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/add.png');
-                    $Urlpath1     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/view.png');
-                    $Urlpath2     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/up.png');
-                    $Urlpath3     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/down.png');
-                    $Urlpath4     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/remove.png');
+        $options = [
+            'decorate' => true,
+            'rootOpen' => "\n <div class='inner'><ul> \n",
+            'rootClose' => "\n </ul></div> \n",
+            'childOpen' => "    <li> \n",        // 'childOpen' => "    <li class='collapsed' > \n",
+            'childClose' => "    </li> \n",
+            'nodeDecorator' => function($node) use (&$self) {
 
-                    $title = $tree->getTitle();
-                    $title = preg_replace('/([ \t\r\n\v\f])(\d{0,3})([ \t\r\n\v\f])/i', '  ', $title);
-                    $title = preg_replace("/<[bB]{1}[rR]{1}[ ]*[\/]*>/xsm", '', $title);
-                    
-                    $linkNode     = '<h4>'. $title . '&nbsp;&nbsp;&nbsp; (node: ' .  $node['id'] . ', level : ' .  $node['lvl'] . ')' . '</h4>';
-                    
-                    if ( ($node['lft'] == -1) && ($node['rgt'] == 0) )   $linkNode .= '<div class="inner">';
-                    if ( ($node['lft'] !== -1) && ($node['rgt'] !== 0) ) $linkNode .= '<div class="inner">';
-                    if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) )  $linkNode .= '<div class="inner">';                    
-                    
-                    $linkAdd    = '<a href="#" class="tree-action" data-url="' . $self->generateUrl('admin_gedmo_menu_new', array("NoLayout" => true, 'category'=>$self->category, 'parent' => $node['id'])) . '" ><img src="'.$UrlpathAdd.'" title="'.$self->translator->trans('pi.add').'"  width="16" /></a>';
-                    $linkEdit   = '<a href="#" class="tree-action" data-url="' . $self->generateUrl('admin_gedmo_menu_edit', array('id' => $node['id'], "NoLayout" => true)) . '" ><img src="'.$Urlpath1.'" title="'.$self->translator->trans('pi.edit').'"  width="16" /></a>';
-                    $linkUp        = '<a href="' . $self->generateUrl('admin_gedmo_menu_move_up', array('id' => $node['id'], 'category'=>$self->category, 'NoLayout'=> $self->NoLayout)) . '"><img src="'.$Urlpath2.'" title="'.$self->translator->trans('pi.move-up').'" width="16" /></a>';
-                    $linkDown     = '<a href="' . $self->generateUrl('admin_gedmo_menu_move_down', array('id' => $node['id'], 'category'=>$self->category, 'NoLayout'=> $self->NoLayout)) . '"><img src="'.$Urlpath3.'" title="'.$self->translator->trans('pi.move-down').'" width="16" /></a>';
-                    $linkDelete    = '<a href="' . $self->generateUrl('admin_gedmo_menu_node_remove', array('id' => $node['id'], 'category'=>$self->category, 'NoLayout'=> $self->NoLayout)) . '"><img src="'.$Urlpath4.'" title="'.$self->translator->trans('pi.delete').'"  width="16" /></a>';
-                    
-                    $linkNode .= $linkAdd . '&nbsp;&nbsp;&nbsp;' . $linkEdit . '&nbsp;&nbsp;&nbsp;' . $linkUp . '&nbsp;&nbsp;&nbsp;' . $linkDown . '&nbsp;&nbsp;&nbsp;' . $linkDelete;
+                $tree   = $self->em->getRepository($self->_entityName)->findOneById($node['id']);
 
-                    if ( ($node['lft'] == -1) && ($node['rgt'] == 0) )  $linkNode .= '</div>'; // if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) )
-                    if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) ) $linkNode .= '</div>'; // if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) )
-                    return $linkNode;
-                }
-        );
-        
+                // define of all url images
+                $Urlpath0     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/plus.png');
+                $UrlpathAdd   = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/add.png');
+                $Urlpath1     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/view.png');
+                $Urlpath2     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/up.png');
+                $Urlpath3     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/down.png');
+                $Urlpath4     = $self->get('templating.helper.assets')->getUrl('bundles/sfynxtemplate/images/icons/tree/remove.png');
+
+                $title = $tree->getTitle();
+                $title = preg_replace('/([ \t\r\n\v\f])(\d{0,3})([ \t\r\n\v\f])/i', '  ', $title);
+                $title = preg_replace("/<[bB]{1}[rR]{1}[ ]*[\/]*>/xsm", '', $title);
+
+                $linkNode     = '<h4>'. $title . '&nbsp;&nbsp;&nbsp; (node: ' .  $node['id'] . ', level : ' .  $node['lvl'] . ')' . '</h4>';
+
+                if ( ($node['lft'] == -1) && ($node['rgt'] == 0) )   $linkNode .= '<div class="inner">';
+                if ( ($node['lft'] !== -1) && ($node['rgt'] !== 0) ) $linkNode .= '<div class="inner">';
+                if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) )  $linkNode .= '<div class="inner">';
+
+                $linkAdd    = '<a href="#" class="tree-action" data-url="' . $self->generateUrl('admin_gedmo_menu_new', array("NoLayout" => true, 'category'=>$self->category, 'parent' => $node['id'])) . '" ><img src="'.$UrlpathAdd.'" title="'.$self->translator->trans('pi.add').'"  width="16" /></a>';
+                $linkEdit   = '<a href="#" class="tree-action" data-url="' . $self->generateUrl('admin_gedmo_menu_edit', array('id' => $node['id'], "NoLayout" => true)) . '" ><img src="'.$Urlpath1.'" title="'.$self->translator->trans('pi.edit').'"  width="16" /></a>';
+                $linkUp        = '<a href="' . $self->generateUrl('admin_gedmo_menu_move_up', array('id' => $node['id'], 'category'=>$self->category, 'NoLayout'=> $self->NoLayout)) . '"><img src="'.$Urlpath2.'" title="'.$self->translator->trans('pi.move-up').'" width="16" /></a>';
+                $linkDown     = '<a href="' . $self->generateUrl('admin_gedmo_menu_move_down', array('id' => $node['id'], 'category'=>$self->category, 'NoLayout'=> $self->NoLayout)) . '"><img src="'.$Urlpath3.'" title="'.$self->translator->trans('pi.move-down').'" width="16" /></a>';
+                $linkDelete    = '<a href="' . $self->generateUrl('admin_gedmo_menu_node_remove', array('id' => $node['id'], 'category'=>$self->category, 'NoLayout'=> $self->NoLayout)) . '"><img src="'.$Urlpath4.'" title="'.$self->translator->trans('pi.delete').'"  width="16" /></a>';
+
+                $linkNode .= $linkAdd . '&nbsp;&nbsp;&nbsp;' . $linkEdit . '&nbsp;&nbsp;&nbsp;' . $linkUp . '&nbsp;&nbsp;&nbsp;' . $linkDown . '&nbsp;&nbsp;&nbsp;' . $linkDelete;
+
+                if ( ($node['lft'] == -1) && ($node['rgt'] == 0) )  $linkNode .= '</div>'; // if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) )
+                if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) ) $linkNode .= '</div>'; // if ( ($node['lft'] == -1) && ($node['rgt'] !== 0) )
+                return $linkNode;
+            }
+        ];
+
         // we repair the tree
         $em->getRepository("PiAppGedmoBundle:Menu")->recover();
         $result = $em->getRepository("PiAppGedmoBundle:Menu")->verify();
-        
-        $node   = $this->container->get('request')->query->get('node');
-        if (!empty($node) ){
-            $node  = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($node, $locale,'object');
+
+        $node   = $request->query->get('node');
+        if (!empty($node) ) {
+            $node = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($node, $locale,'object');
         } else {
             $node = null;
         }
-        
-        $nodes       = $em->getRepository("PiAppGedmoBundle:Menu")->getAllTree($locale, $category, 'array', false, false, $node);
-        $tree        = $em->getRepository("PiAppGedmoBundle:Menu")->buildTree($nodes, $options);        
-        
-        return $this->render("PiAppGedmoBundle:Menu:$template", array(
+
+        $nodes = $em->getRepository("PiAppGedmoBundle:Menu")->getAllTree($locale, $category, 'array', false, false, $node);
+        $tree  = $em->getRepository("PiAppGedmoBundle:Menu")->buildTree($nodes, $options);
+
+        return $this->render("PiAppGedmoBundle:Menu:$template", [
             'tree'        => $tree,
             'form_search' => $form_search->createView(),
             'category'    => $category,
             'NoLayout'    => $NoLayout,
-        ));
-    }  
-    
+        ]);
+    }
+
     /**
      * Move the node up in the same level
-     * 
+     *
      * @Secure(roles="ROLE_EDITOR")
         * @param int $id
         * @param string $category
         * @access    public
-        * 
+        *
         * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function moveUpAction($id, $category)
     {
         $em                 = $this->getDoctrine()->getManager();
-        $locale             = $this->container->get('request')->getLocale();
-        $NoLayout        = $this->container->get('request')->query->get('NoLayout');
-        
+        $locale             = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $NoLayout        = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
         $node             = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale);
         $entity_node_pos = $node->getRoot();
-        
-         if ($node->getLvl() == NULL){
+
+         if ($node->getLvl() == NULL) {
             $all_root_nodes     = $em->getRepository("PiAppGedmoBundle:Menu")->getAllByCategory($category, null, "ASC")->getQuery()->getResult();
             foreach($all_root_nodes as $key => $routeNode){
                 $routenode_pos = $routeNode->getRoot();
@@ -499,37 +505,41 @@ class MenuController extends abstractController
                 }
             }
             $em->flush();
-         }else
-            $em->getRepository("PiAppGedmoBundle:Menu")->moveUp($node);
-         
+         } else {
+             $em->getRepository("PiAppGedmoBundle:Menu")->moveUp($node);
+         }
+
          // we repair the tree
          $em->getRepository("PiAppGedmoBundle:Menu")->recover();
          $result = $em->getRepository("PiAppGedmoBundle:Menu")->verify();
 
-        return $this->redirect($this->generateUrl('admin_gedmo_menu_tree', array('category'=>$category, 'NoLayout' => $NoLayout)));
+        return $this->redirect(
+            $this->generateUrl('admin_gedmo_menu_tree', ['category'=>$category, 'NoLayout' => $NoLayout])
+        );
     }
-    
+
     /**
      * Move the node down in the same level
-     * 
+     *
      * @Secure(roles="ROLE_EDITOR")
         * @param int $id
         * @param string $category
         * @access    public
-        * 
+        *
         * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function moveDownAction($id, $category)
     {
-        $em                 = $this->getDoctrine()->getManager();
-        $locale             = $this->container->get('request')->getLocale();
-        $NoLayout        = $this->container->get('request')->query->get('NoLayout');
-        
-        $node             = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale);
+        $em       = $this->getDoctrine()->getManager();
+        $locale   = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
+        $NoLayout = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
+        $node = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale);
         $entity_node_pos = $node->getRoot();
-         
+
         if ($node->getLvl() == NULL){
-            $all_root_nodes     = $em->getRepository("PiAppGedmoBundle:Menu")->getAllByCategory($category, null, "DESC")->getQuery()->getResult();
+            $all_root_nodes     = $em->getRepository("PiAppGedmoBundle:Menu")
+                ->getAllByCategory($category, null, "DESC")->getQuery()->getResult();
             foreach($all_root_nodes as $key => $routeNode){
                 $routenode_pos = $routeNode->getRoot();
                 if ( $routenode_pos > $entity_node_pos ){
@@ -539,37 +549,40 @@ class MenuController extends abstractController
                 }
             }
             $em->flush();
-        }else
+        } else {
             $em->getRepository("PiAppGedmoBundle:Menu")->moveDown($node);
+        }
 
         // we repair the tree
         $em->getRepository("PiAppGedmoBundle:Menu")->recover();
         $result = $em->getRepository("PiAppGedmoBundle:Menu")->verify();
-        
-        return $this->redirect($this->generateUrl('admin_gedmo_menu_tree', array('category'=>$category, 'NoLayout' => $NoLayout)));
+
+        return $this->redirect(
+            $this->generateUrl('admin_gedmo_menu_tree', ['category'=>$category, 'NoLayout' => $NoLayout])
+        );
     }
-    
+
     /**
      * Removes given $node from the tree and reparents its descendants
-     * 
+     *
      * @Secure(roles="ROLE_EDITOR")
         * @param int $id
         * @param string $category
         * @access    public
-        * 
+        *
         * @author Etienne de Longeaux <etienne.delongeaux@gmail.com>
      */
     public function removeAction($id, $category)
     {
-        $em        = $this->getDoctrine()->getManager();
-        $locale    = $this->container->get('request')->getLocale();
+        $em      = $this->getDoctrine()->getManager();
+        $locale  = $this->container->get('request_stack')->getCurrentRequest()->getLocale();
         $node    = $em->getRepository("PiAppGedmoBundle:Menu")->findNodeOr404($id, $locale);
-        
-        $NoLayout   = $this->container->get('request')->query->get('NoLayout');
-    
-        $em->getRepository("PiAppGedmoBundle:Menu")->removeFromTree($node);
-        return $this->redirect($this->generateUrl('admin_gedmo_menu_tree', array('category'=>$category, 'NoLayout' => $NoLayout)));
-    }
 
-    
+        $NoLayout = $this->container->get('request_stack')->getCurrentRequest()->query->get('NoLayout');
+
+        $em->getRepository("PiAppGedmoBundle:Menu")->removeFromTree($node);
+        return $this->redirect(
+            $this->generateUrl('admin_gedmo_menu_tree', ['category'=>$category, 'NoLayout' => $NoLayout])
+        );
+    }
 }
